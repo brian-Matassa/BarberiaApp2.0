@@ -1,0 +1,2483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> 
+    <title>Urban Style</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Urban Style">
+    <link rel="apple-touch-icon" href="icon-192x192.png">
+    <link rel="manifest" href="manifest.json">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Urban Style */
+        :root {
+            /* Black, White, Gray Palette */
+            --primary-color: #ffffff;    /* White (Main Accent on dark) - Se actualiza por JS */
+            --secondary-color: #333333;  /* Dark Gray (Button background) */
+            --background-dark: #000000;  /* Deep Black */
+            --text-light: #f0f0f0;       /* Off-white text */
+            --card-bg: #1a1a1a;          /* Darker gray for cards */
+            --button-bg-light: #444444;  /* Lighter gray for interactive elements */
+            --accent-green: #34d399;     /* Light Green for Success/Completed */
+            --accent-red: #ef4444;       /* Red for Error/Delete */
+            
+            /* NEW: Light Theme variables */
+            --background-light: #f0f0f0; 
+            --text-dark: #1a1a1a;        /* Dark text for light mode */
+            --card-bg-light: #ffffff;
+            
+            /* NEW: Text Muted Color */
+            --text-muted: #9ca3af;       /* Default: gray-400 (for dark mode) */
+        }
+        
+        /* Dark Theme (Default) */
+        [data-theme="dark"] {
+            --bg: var(--background-dark);
+            --text: var(--text-light);
+            --card: var(--card-bg);
+            --secondary-btn-bg: var(--secondary-color);
+            --border-color: #3d3d3d;
+            --text-muted: #9ca3af; /* gray-400 */
+        }
+
+        /* Light Theme */
+        [data-theme="light"] {
+            --bg: var(--background-light);
+            --text: var(--text-dark);
+            --card: var(--card-bg-light);
+            --secondary-btn-bg: #e5e7eb; /* Light gray */
+            --border-color: #e5e7eb;
+            --text-muted: #4b5563; /* gray-600 for contrast on light background */
+
+            /* Default: Use the selected accent color, but if it's 'white' the fix below applies */
+            --primary-color: var(--base-accent); 
+        }
+        
+        /* CORRECCIÓN CRUCIAL PARA MODO CLARO Y ACENTO BLANCO */
+        /* Si el tema es claro Y el acento seleccionado es 'white', forzamos el color primario a ser el texto oscuro */
+        [data-theme="light"][data-accent="white"] {
+            --primary-color: var(--text-dark); 
+        }
+        
+        /* --- INICIO: CORRECCIÓN DEL LOGO --- */
+        /* Aplicamos el filtro de inversión solo en modo oscuro */
+        [data-theme="dark"] .logo-conditional-invert {
+            filter: invert(1);
+        }
+        [data-theme="light"] .logo-conditional-invert {
+            filter: none;
+        }
+        /* --- FIN: CORRECCIÓN DEL LOGO --- */
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 1.5rem; 
+            overflow-y: auto; 
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .app-container {
+            max-width: 600px;
+            width: 100%;
+            background-color: var(--card);
+            border-radius: 1.5rem;
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .header h2 {
+            flex-grow: 1;
+            text-align: center;
+            font-size: 1.875rem; /* text-3xl */
+        }
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            padding: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .card {
+            background-color: var(--card);
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s;
+        }
+
+        h2, h3 {
+            font-family: 'Montserrat', sans-serif;
+            /* Estos elementos usarán el color de acento primario, que ahora se ajusta en light/white */
+            color: var(--primary-color);
+        }
+
+        /* Utilidad para texto secundario que cambia de gris con el tema */
+        .text-muted {
+            color: var(--text-muted);
+        }
+
+        /* Redefined Primary Button: Uses --primary-color for accent */
+        .btn-primary {
+            background-color: var(--primary-color);
+            /* Importante: Mantener el color base oscuro para asegurar la legibilidad en la mayoría de los casos */
+            color: var(--background-dark); 
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, opacity 0.2s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif;
+        }
+        /* Ensure primary button text is visible in light mode (even if primary color is white) */
+        [data-theme="light"] .btn-primary {
+            color: var(--text-dark); /* Force dark text color in light mode */
+            border: 1px solid #ccc;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+            opacity: 0.95;
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* NEW: Custom style for the two main menu buttons (from previous step) */
+        .btn-fixed-mode {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background-color 0.3s, color 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
+            font-family: 'Montserrat', sans-serif;
+            border: none;
+        }
+        
+        /* Dark Mode: White button, Black text/icons */
+        [data-theme="dark"] .btn-fixed-mode {
+            background-color: var(--text-light); /* Off-white background */
+            color: var(--background-dark);       /* Black text/icons */
+        }
+
+        /* Light Mode: Black button, White text/icons */
+        [data-theme="light"] .btn-fixed-mode {
+            background-color: var(--text-dark); /* Dark text background (Black) */
+            color: var(--text-light);          /* Off-white text/icons (White) */
+        }
+        
+        .btn-fixed-mode:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+            opacity: 0.95;
+        }
+        /* Fin de NEW: Custom style for the two main menu buttons */
+
+        /* Redefined Secondary Button: Uses --secondary-btn-bg and --text */
+        .btn-secondary {
+            background-color: var(--secondary-btn-bg);
+            color: var(--text);
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s;
+            border: 1px solid var(--border-color);
+        }
+        [data-theme="light"] .btn-secondary {
+            color: var(--text-dark);
+            border-color: #ccc;
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background-color: var(--button-bg-light);
+            transform: translateY(-1px);
+        }
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Input Styles */
+        input[type="text"],
+        input[type="date"],
+        input[type="time"],
+        input[type="number"],
+        textarea,
+        select {
+            background-color: var(--secondary-btn-bg);
+            color: var(--text);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        
+        /* NEW File Input Custom Styling */
+        input[type="file"] {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            /* Estilos específicos para el botón del archivo */
+            background-color: var(--secondary-btn-bg);
+            color: var(--text);
+        }
+        input[type="file"]::file-selector-button {
+            background-color: var(--button-bg-light); 
+            color: var(--text-light);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        [data-theme="light"] input[type="file"]::file-selector-button {
+            background-color: #ccc;
+            color: var(--text-dark);
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5); /* White glow on focus */
+        }
+        [data-theme="light"] input:focus, [data-theme="light"] textarea:focus, [data-theme="light"] select:focus {
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Calendar and Time Slots Styles (retained) */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            width: 100%;
+            max-width: 350px; 
+            margin: 0 auto;
+        }
+        
+        .time-slot-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        /* Time slot base style (retained) */
+        .time-slot-btn {
+            background-color: var(--secondary-btn-bg);
+            color: var(--text);
+            padding: 0.75rem 0.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            transition: background-color 0.3s, transform 0.1s;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .time-slot-btn:hover:not(:disabled) {
+            background-color: var(--button-bg-light);
+            transform: scale(1.05);
+        }
+
+        .time-slot-btn.selected-slot {
+            background-color: var(--primary-color);
+            color: var(--background-dark); 
+            font-weight: 700;
+            transform: scale(1.05);
+        }
+        
+        /* Style for past/unavailable slots (muted gray) - Used when isPast is true */
+        .time-slot-btn.occupied {
+            background-color: var(--secondary-btn-bg);
+            color: var(--text-muted);
+            opacity: 0.7;
+            text-decoration: line-through;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
+        /* NUEVO: Style para turnos ya agendados (Verde) */
+        .time-slot-btn.booked-green {
+            background-color: var(--accent-green) !important; 
+            color: var(--background-dark) !important; 
+            font-weight: 700 !important;
+            opacity: 1 !important;
+            text-decoration: none !important;
+            cursor: default !important;
+            pointer-events: none; 
+        }
+
+        /* NEW: Service selection buttons for Cut Counter */
+        .service-btn {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 2px solid var(--border-color); /* Slightly thicker initial border */
+            background-color: var(--secondary-btn-bg);
+            color: var(--text);
+            text-align: center;
+            transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+            cursor: pointer;
+        }
+
+        .service-btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        /* The green border requested by the user */
+        .service-btn.selected-service {
+            border: 3px solid var(--accent-green); 
+            background-color: rgba(52, 211, 153, 0.1); /* Light green background */
+            color: var(--accent-green);
+            font-weight: 700;
+            transform: scale(1.02);
+        }
+
+        /* Hide screens by default */
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+        
+        /* Appointment Item Style uses --primary-color (retained) */
+        .appointment-item .time-text {
+            color: var(--primary-color);
+        }
+
+        /* Modal and Modal Content Styling (retained) */
+        .modal {
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: var(--card);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            max-height: 90vh; 
+            overflow-y: auto; 
+            transition: background-color 0.3s;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-xl z-50 hidden transition-opacity duration-300" role="alert">
+        <p id="toast-message"></p>
+    </div>
+
+    <div class="app-container">
+
+        <div id="main-menu-screen" class="screen active p-6">
+            
+            <header class="text-center mb-8">
+                <div class="mb-4">
+                    <img id="barberLogoDisplay" src="https://i.imgur.com/8N4pB9q.png" alt="Logo de Barbería" class="w-20 h-20 mx-auto rounded-full border-2 border-[var(--primary-color)] p-1 logo-conditional-invert">
+                </div>
+                <h2 id="barberNameDisplay" class="text-4xl font-extrabold tracking-wider" style="color: var(--primary-color);">Urban Style</h2>
+                <p class="text-sm mt-1 text-muted">Gestión del Barbero</p>
+            </header>
+
+            <section id="dailySummaryCard" class="card mb-8 p-0 border-l-4 border-accent-green collapsed">
+                <button id="toggleSummaryBtn" class="w-full p-6 flex justify-between items-center bg-[var(--card)] transition-all duration-300" aria-expanded="false" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
+                    <h3 class="text-xl font-semibold text-accent-green m-0 p-0">RESUMEN DE HOY</h3>
+                    <span id="collapseIcon" class="text-[var(--primary-color)] transition-transform duration-300 transform">▼</span>
+                </button>
+
+                <div id="summaryContent" class="transition-all duration-300 overflow-hidden" style="max-height: 0;">
+                    <div class="grid grid-cols-2 gap-4 text-center p-6 pt-0">
+                        <div>
+                            <p class="text-sm text-muted">Turnos Hoy (Total)</p>
+                            <p id="dashboardDailyCuts" class="text-5xl font-bold mt-1" style="color: var(--primary-color);">0</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-muted">Ganancias Hoy (Total)</p>
+                            <p id="dashboardDailyEarnings" class="text-3xl font-bold text-accent-green mt-1">$0</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <button id="goToTodayAppointments" class="btn-fixed-mode flex flex-col items-center justify-center p-4 h-28">
+                    <span class="text-3xl mb-1">📅</span>
+                    <span class="text-sm font-semibold text-center">TURNOS HOY</span>
+                </button>
+                
+                <button id="goToScheduleAppointment" class="btn-fixed-mode flex flex-col items-center justify-center p-4 h-28">
+                    <span class="text-3xl mb-1">✍️</span>
+                    <span class="text-sm font-semibold text-center">AGENDAR TURNO</span>
+                </button>
+                
+                <button id="goToCutCounter" class="btn-secondary flex flex-col items-center justify-center p-4 h-28">
+                    <span class="text-3xl mb-1">💰</span>
+                    <span class="text-sm font-semibold text-center">CONTAR CORTE</span>
+                </button>
+
+                <button id="goToClients" class="btn-secondary flex flex-col items-center justify-center p-4 h-28">
+                    <span class="text-3xl mb-1">👥</span>
+                    <span class="text-sm font-semibold text-center">CLIENTES</span>
+                </button>
+                
+                <button id="goToStats" class="btn-secondary flex flex-col items-center justify-center p-4 h-28">
+                    <span class="text-3xl mb-1">📈</span>
+                    <span class="text-sm font-semibold text-center">ESTADÍSTICAS</span>
+                </button>
+
+                <button id="goToSettings" class="btn-secondary flex flex-col items-center justify-center p-4 h-28">
+                    <span class="text-3xl mb-1">⚙️</span>
+                    <span class="text-sm font-semibold text-center">CONFIGURACIÓN</span>
+                </button>
+
+            </div>
+
+            <footer class="text-center text-muted text-xs mt-4">
+                <p>&copy; 2025 Urban Style. V1.0</p>
+            </footer>
+        </div>
+
+        <div id="appointments-screen" class="screen p-6">
+            <div class="header">
+                <button id="backToMainFromAppointments" class="back-btn">←</button>
+                <h2>Turnos de Hoy</h2>
+            </div>
+            
+            <div id="dailyAppointmentsList">
+                </div>
+
+            <div id="noAppointmentsMessage" class="card text-center py-8 hidden">
+                <p class="text-lg font-medium">No hay turnos agendados para hoy.</p>
+                <button id="openScheduleModalFromAppointments" class="btn-primary mt-4">Agendar Turno Ahora</button>
+            </div>
+        </div>
+
+        <div id="schedule-appointment-screen" class="screen p-6">
+            <div class="header">
+                <button id="backToMainFromSchedule" class="back-btn">←</button>
+                <h2>Agendar Turno</h2>
+            </div>
+            
+            <section class="card text-center">
+                <div class="flex justify-between items-center mb-4">
+                    <button id="prevMonth" class="btn-secondary px-3 py-1">←</button>
+                    <h3 id="calendarMonthYear" class="text-xl font-bold">Mes, Año</h3>
+                    <button id="nextMonth" class="btn-secondary px-3 py-1">→</button>
+                </div>
+                
+                <div class="calendar-grid day-labels text-muted text-xs font-semibold">
+                    <span>Mar</span>
+                    <span>Mié</span>
+                    <span>Jue</span>
+                    <span>Vie</span>
+                    <span>Sáb</span>
+                </div>
+                
+                <div id="calendarDaysGrid" class="calendar-grid">
+                    </div>
+            </section>
+            
+            <section class="card">
+                <h3 class="text-xl font-semibold mb-3" style="color: var(--primary-color);">Horarios Disponibles</h3>
+                <p id="selectedDateDisplay" class="text-center text-muted mb-4">Selecciona un día.</p>
+                <div id="timeSlotsContainer" class="time-slot-grid">
+                    </div>
+                <button id="openScheduleModal" class="btn-primary w-full mt-6 hidden">Continuar Agendamiento</button>
+            </section>
+        </div>
+
+        <div id="cut-counter-screen" class="screen p-6">
+            <div class="header">
+                <button id="backToMainFromCounter" class="back-btn">←</button>
+                <h2>Corte Rápido (Contado)</h2>
+            </div>
+            
+            <section class="card text-center border-l-4 border-accent-green">
+                <h3 class="text-xl font-bold text-muted mb-2">RESUMEN DEL DÍA (Cortes Rápidos)</h3>
+                <div class="grid grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <p class="text-sm text-muted">Cortes Rápidos Hoy</p>
+                        <p id="todayCutsCount" class="text-5xl font-bold mt-1" style="color: var(--primary-color);">0</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-muted">Ganancias Rápidas Estimadas</p>
+                        <p id="todayEarnings" class="text-3xl font-bold text-accent-green mt-1">$0</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h3 class="text-xl font-semibold mb-4" style="color: var(--primary-color);">Selecciona Servicios</h3>
+                
+                <div id="serviceSelectionContainer" class="grid grid-cols-2 gap-3 mb-6">
+                    <p class="text-center text-muted col-span-2">Cargando servicios...</p>
+                </div>
+
+                <div class="flex justify-between items-center border-t border-b py-3 mb-6 border-[var(--border-color)]">
+                    <p class="text-lg font-bold">Total a Pagar:</p>
+                    <p id="currentCutTotalDisplay" class="text-3xl font-extrabold text-accent-green">$0</p>
+                </div>
+
+                <div class="space-y-4">
+                    <button id="registerCashCutBtn" class="btn-primary w-full py-3" disabled>
+                        Registrar **Efectivo** </button>
+                    <button id="registerTransferCutBtn" class="btn-secondary w-full py-3" disabled>
+                        Registrar **Transferencia**
+                    </button>
+                </div>
+                <button id="resetCounterBtn" class="btn-delete w-full mt-6 py-3">Reiniciar Contador Diario</button>
+            </section>
+        </div>
+
+        <div id="client-management-screen" class="screen p-6">
+            <div class="header">
+                <button id="backToMainFromClients" class="back-btn">←</button>
+                <h2>Clientes</h2>
+            </div>
+
+            <div class="flex space-x-2 mb-4">
+                <input type="text" id="clientSearchInput" placeholder="Buscar por nombre o teléfono" class="flex-grow">
+                <button id="openClientModalBtn" class="btn-primary px-4 py-2 text-xl">+</button>
+            </div>
+            
+            <div id="clientsList" class="space-y-3">
+                </div>
+        </div>
+
+        <div id="client-details-screen" class="screen p-6">
+            <div class="header">
+                <button id="backToClientsFromDetailsBtn" class="back-btn">←</button>
+                <h2>Detalles de Cliente</h2>
+            </div>
+            
+            <section class="card text-center">
+                <h3 id="clientDetailName" class="text-3xl font-bold mb-1" style="color: var(--primary-color);">Nombre del Cliente</h3>
+                <p id="clientDetailPhone" class="text-lg text-muted mb-4">Teléfono: N/A</p>
+                
+                <div class="grid grid-cols-2 gap-4 text-center border-t pt-4 border-gray-700">
+                    <div>
+                        <p class="text-sm text-muted">Visitas Totales</p>
+                        <p id="clientDetailVisits" class="text-4xl font-bold mt-1" style="color: var(--primary-color);">0</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-muted">Última Visita</p>
+                        <p id="clientDetailLastVisit" class="text-lg font-bold text-muted mt-1">N/A</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="card p-4">
+                <h3 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-1" style="color: var(--primary-color);">Historial de Turnos</h3>
+                <div id="clientDetailAppointmentsList" class="space-y-3 max-h-64 overflow-y-auto">
+                    <p class="text-center text-muted">No tiene turnos registrados.</p>
+                </div>
+            </section>
+        </div>
+
+        <div id="stats-screen" class="screen p-6">
+            <div class="header">
+                <button id="backToMainFromStats" class="back-btn">←</button>
+                <h2>Estadísticas</h2>
+            </div>
+
+            <section class="card p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <button id="prevStatsPeriod" class="btn-secondary px-3 py-1">←</button>
+                    <h3 id="statsPeriodDisplay" class="text-xl font-bold text-center" style="color: var(--primary-color);">Hoy</h3>
+                    <button id="nextStatsPeriod" class="btn-secondary px-3 py-1">→</button>
+                </div>
+
+                <div class="flex justify-center space-x-2 mb-6">
+                    <button id="statsTabDaily" class="stats-tab-btn active-tab" data-view="daily">Día</button>
+                    <button id="statsTabWeekly" class="stats-tab-btn" data-view="weekly">Semana</button>
+                    <button id="statsTabMonthly" class="stats-tab-btn" data-view="monthly">Mes</button>
+                </div>
+
+                <div class="stats-view active" id="stats-daily-view">
+                    <div class="grid grid-cols-2 gap-4 text-center">
+                        <div class="stats-card">
+                            <p class="text-sm text-muted">Total de Cortes</p>
+                            <p id="statsTotalCuts" class="stats-value-primary text-5xl mt-1">0</p>
+                        </div>
+                        <div class="stats-card">
+                            <p class="text-sm text-muted">Ganancias Netas</p>
+                            <p id="statsTotalEarnings" class="stats-value-green text-3xl mt-1">$0</p>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold mb-3" style="color: var(--primary-color); border-bottom: 1px solid var(--secondary-color);" class="pb-1">Desglose de Pago</h4>
+                        <div class="space-y-2">
+                            <div class="stats-item-detail">
+                                <span class="font-medium text-[var(--text)]">Efectivo</span>
+                                <span class="stats-value-primary font-semibold text-lg" id="statsCashEarnings">$0</span>
+                            </div>
+                            <div class="stats-item-detail">
+                                <span class="font-medium text-[var(--text)]">Transferencia</span>
+                                <span class="stats-value-primary font-semibold text-lg" id="statsTransferEarnings">$0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold mb-3" style="color: var(--primary-color); border-bottom: 1px solid var(--secondary-color);" class="pb-1">Desglose de Servicios</h4>
+                        <div id="statsServiceBreakdown" class="space-y-2">
+                            <p class="text-center text-muted">No hay datos de servicios.</p>
+                            </div>
+                    </div>
+                </div>
+
+                <div class="stats-view" id="stats-weekly-view">
+                    <p class="text-center text-muted">Vista Semanal</p>
+                </div>
+                <div class="stats-view" id="stats-monthly-view">
+                    <p class="text-center text-muted">Vista Mensual</p>
+                </div>
+            </section>
+        </div>
+        
+        <div id="settings-screen" class="screen p-6">
+            <div class="header">
+                <button id="backToMainFromSettings" class="back-btn">←</button>
+                <h2>Configuración</h2>
+            </div>
+
+            <section class="card">
+                <h3 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-1" style="color: var(--primary-color);">Información de la Barbería</h3>
+                <form id="barberInfoForm" class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label for="barberNameInput" class="block text-sm font-medium text-muted mb-1">Nombre de la Barbería</label>
+                        <input type="text" id="barberNameInput" required class="block w-full rounded-md">
+                    </div>
+                    
+                    <div>
+                        <label for="barberLogoFileInput" class="block text-sm font-medium text-muted mb-1">Subir Logo desde el Teléfono (JPG, PNG)</label>
+                        <input type="file" id="barberLogoFileInput" accept="image/png, image/jpeg" class="block w-full text-sm">
+                        
+                        <p class="text-xs text-muted mt-2">O si lo prefieres:</p>
+                        
+                        <label for="barberLogoInput" class="block text-sm font-medium text-muted mb-1 mt-2">URL del Logo (ej. https://i.imgur.com/...)</label>
+                        <input type="text" id="barberLogoInput" class="block w-full rounded-md">
+                    </div>
+                    <button type="submit" class="btn-primary mt-2">Guardar Información</button>
+                </form>
+            </section>
+            
+            <section class="card">
+                <h3 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-1" style="color: var(--primary-color);">Gestión de Datos</h3>
+                <button id="goToServiceManagement" class="btn-secondary w-full py-3 mb-4">
+                    Gestionar Servicios
+                </button>
+            </section>
+            
+            <section class="card">
+                <h3 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-1" style="color: var(--primary-color);">Personalización</h3>
+                
+                <div class="mb-4">
+                    <label for="accentColorSelect" class="block text-sm font-medium text-muted mb-1">Color de Acento</label>
+                    <select id="accentColorSelect" class="focus:ring-primary-color focus:border-primary-color block w-full rounded-md p-3" style="background-color: var(--secondary-btn-bg); color: var(--text); border: 1px solid var(--border-color);">
+                        <option value="white">⚪ Blanco (Predeterminado)</option>
+                        <option value="orange">🟠 Naranja (#fca311)</option>
+                        <option value="green">🟢 Verde (#34d399)</option>
+                        <option value="blue">🔵 Azul (#3b82f6)</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-between items-center pt-2 border-t border-gray-700">
+                    <label for="darkModeToggle">Modo Oscuro</label>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="darkModeToggle" class="sr-only peer">
+                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--primary-color)]"></div>
+                    </label>
+                </div>
+            </section>
+            
+            <section class="card text-center">
+                <h3 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-1" style="color: var(--primary-color);">Otros Ajustes (Próximamente)</h3>
+                <p class="mt-6 font-bold text-muted">¡Más opciones de configuración estarán disponibles pronto!</p>
+            </section>
+        </div>
+
+        <div id="service-management-screen" class="screen p-6">
+            <div class="header">
+                <button id="backToSettingsFromServices" class="back-btn">←</button>
+                <h2>Gestión de Servicios</h2>
+            </div>
+            
+            <div class="flex justify-end mb-4">
+                <button id="openAddServiceModalBtn" class="btn-primary px-4 py-2 text-sm">
+                    + Añadir Servicio
+                </button>
+            </div>
+
+            <div id="servicesList" class="space-y-3">
+                </div>
+            
+            <div class="card mt-6">
+                <p class="text-sm text-muted">
+                    Nota: Al editar o eliminar los servicios, los turnos ya agendados mantendrán el precio y nombre original. Asegúrate de siempre tener al menos un servicio disponible para poder agendar un turno.
+                </p>
+            </div>
+        </div>
+
+        <div id="scheduleAppointmentModal" class="fixed inset-0 modal z-50 hidden">
+            <div class="modal-content">
+                <h3 class="text-2xl font-semibold mb-4 text-center" style="color: var(--primary-color);">Agendar Turno</h3>
+                <form id="scheduleForm" class="grid grid-cols-1 gap-4">
+                    <p class="text-center text-lg font-medium mb-3">Día: <span id="selectedScheduleDateDisplay" style="color: var(--primary-color);"></span></p>
+                    
+                    <div>
+                        <label for="scheduleClientSelect" class="block text-sm font-medium text-muted mb-1">Cliente</label>
+                        <select id="scheduleClientSelect" required class="focus:ring-primary-color focus:border-primary-color block w-full rounded-md" style="background-color: var(--secondary-btn-bg); color: var(--text); border: 1px solid var(--border-color);">
+                            <option value="">-- Selecciona un cliente --</option>
+                            <option value="NEW_CLIENT">-- Cliente Nuevo (Escribe el nombre) --</option>
+                        </select>
+                        <input type="text" id="scheduleClientName" placeholder="Escribe el nombre del cliente nuevo" class="focus:ring-primary-color focus:border-primary-color block w-full rounded-md mt-2 hidden">
+                        <input type="hidden" id="scheduleClientId">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-muted mb-2">Horario</label>
+                        <p id="scheduleAppointmentTimeDisplay" class="text-xl font-bold" style="color: var(--primary-color);"></p>
+                        <input type="hidden" id="scheduleAppointmentTime" required>
+                        <input type="hidden" id="scheduleAppointmentDate" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-muted mb-1">Servicios</label>
+                        <div id="scheduleServicesCheckboxes" class="space-y-2">
+                             </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-4 mt-4">
+                        <button type="button" id="closeScheduleModalBtn" class="btn-secondary">Cancelar</button>
+                        <button type="submit" class="btn-primary">Confirmar Turno</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="clientModal" class="fixed inset-0 modal z-50 hidden">
+            <div class="modal-content">
+                <h3 id="clientModalTitle" class="text-2xl font-semibold mb-4 text-center" style="color: var(--primary-color);">Añadir Cliente</h3>
+                <form id="clientForm" class="grid grid-cols-1 gap-4">
+                    <input type="hidden" id="clientId">
+                    <div>
+                        <label for="clientName" class="block text-sm font-medium text-muted mb-1">Nombre</label>
+                        <input type="text" id="clientName" required class="block w-full rounded-md">
+                    </div>
+                    <div>
+                        <label for="clientPhone" class="block text-sm font-medium text-muted mb-1">Teléfono (opcional)</label>
+                        <input type="text" id="clientPhone" class="block w-full rounded-md">
+                    </div>
+                    <div class="flex justify-end space-x-4 mt-4">
+                        <button type="button" id="closeClientModalBtn" class="btn-secondary">Cancelar</button>
+                        <button type="submit" id="clientSubmitBtn" class="btn-primary">Guardar Cliente</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div id="serviceModal" class="fixed inset-0 modal z-50 hidden">
+            <div class="modal-content">
+                <h3 id="serviceModalTitle" class="text-2xl font-semibold mb-4 text-center" style="color: var(--primary-color);">Añadir Servicio</h3>
+                <form id="serviceForm" class="grid grid-cols-1 gap-4">
+                    <input type="hidden" id="serviceId">
+                    <div>
+                        <label for="serviceName" class="block text-sm font-medium text-muted mb-1">Nombre del Servicio</label>
+                        <input type="text" id="serviceName" required class="block w-full rounded-md">
+                    </div>
+                    <div>
+                        <label for="servicePrice" class="block text-sm font-medium text-muted mb-1">Precio ($)</label>
+                        <input type="number" id="servicePrice" required min="0" step="100" class="block w-full rounded-md">
+                    </div>
+                    <div class="flex justify-end space-x-4 mt-4">
+                        <button type="button" id="closeServiceModalBtn" class="btn-secondary">Cancelar</button>
+                        <button type="submit" id="serviceSubmitBtn" class="btn-primary">Guardar Servicio</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div id="editAppointmentModal" class="fixed inset-0 modal z-50 hidden">
+             </div>
+
+        <div id="custom-modal" class="fixed inset-0 modal z-50 hidden">
+            <div class="modal-content text-center">
+                <p id="modal-message" class="text-lg font-semibold mb-6 text-[var(--text)]"></p>
+                <button id="modal-close-btn" class="btn-primary">Cerrar</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Configuration Constants ---
+        // const FIXED_APPOINTMENT_PRICE = 2000; // REMOVED: No longer used for quick cuts
+        const TIME_SLOTS = ["09:00", "09:20", "09:40", "10:00", "10:20", "10:40", "11:00", "11:20", "11:40", "12:00", "12:20", "12:40"];
+        
+        const PRIMARY_COLOR_KEY = 'appPrimaryColor';
+        const THEME_KEY = 'appTheme';
+        const SERVICES_KEY = 'barberServices';
+        
+        // NEW: Barber Info Keys
+        const BARBER_NAME_KEY = 'barberShopName';
+        const BARBER_LOGO_KEY = 'barberShopLogoUrl';
+
+        // Initial data for setup
+        const DEFAULT_BARBER_NAME = 'Urban Style';
+        const DEFAULT_BARBER_LOGO = 'https://i.imgur.com/8N4pB9q.png'; // Default logo
+        const DEFAULT_SERVICES = [
+            { id: 'S1', name: 'Corte de Pelo', price: 2000 },
+            { id: 'S2', name: 'Barba', price: 1000 },
+            { id: 'S3', name: 'Corte + Barba', price: 2800 },
+            { id: 'S4', name: 'Diseño/Tribal', price: 500 },
+        ];
+        
+        // NEW: Color Palettes Map & Keys
+        const COLOR_PALETTES = {
+            'white': '#ffffff', 
+            'orange': '#fca311',
+            'green': '#34d399',
+            'blue': '#3b82f6'
+        };
+
+        // --- Internal State ---
+        let currentCalendarDate = new Date();
+        let selectedDayElement = null;
+        let selectedScheduleTimeElement = null;
+        let selectedDate = null;
+        let selectedTime = null;
+        let currentStatsPeriod = 'daily'; 
+        let currentStatsDate = new Date();
+        let clientToView = null;
+        
+        // NEW State for quick counter cut
+        let selectedCounterServices = [];
+
+        // --- Element References ---
+        const mainMenuScreen = document.getElementById('main-menu-screen');
+        const appointmentsScreen = document.getElementById('appointments-screen');
+        const scheduleAppointmentScreen = document.getElementById('schedule-appointment-screen');
+        const cutCounterScreen = document.getElementById('cut-counter-screen');
+        const statsScreen = document.getElementById('stats-screen');
+        const clientManagementScreen = document.getElementById('client-management-screen');
+        const clientDetailsScreen = document.getElementById('client-details-screen');
+        const settingsScreen = document.getElementById('settings-screen');
+        const serviceManagementScreen = document.getElementById('service-management-screen'); 
+
+        const goToTodayAppointmentsBtn = document.getElementById('goToTodayAppointments');
+        const goToScheduleAppointmentBtn = document.getElementById('goToScheduleAppointment');
+        const goToClientsBtn = document.getElementById('goToClients');
+        const goToCutCounterBtn = document.getElementById('goToCutCounter');
+        const goToStatsBtn = document.getElementById('goToStats');
+        const goToSettingsBtn = document.getElementById('goToSettings');
+        const goToServiceManagementBtn = document.getElementById('goToServiceManagement'); 
+
+        const backToMainFromAppointmentsBtn = document.getElementById('backToMainFromAppointments');
+        const backToMainFromScheduleBtn = document.getElementById('backToMainFromSchedule');
+        const backToMainFromClientsBtn = document.getElementById('backToMainFromClients');
+        const backToMainFromCounterBtn = document.getElementById('backToMainFromCounter');
+        const backToMainFromStatsBtn = document.getElementById('backToMainFromStats');
+        const backToMainFromSettingsBtn = document.getElementById('backToMainFromSettings');
+        const backToClientsFromDetailsBtn = document.getElementById('backToClientsFromDetailsBtn');
+        const backToSettingsFromServicesBtn = document.getElementById('backToSettingsFromServices'); 
+        
+        const calendarMonthYear = document.getElementById('calendarMonthYear');
+        const calendarDaysGrid = document.getElementById('calendarDaysGrid');
+        const selectedDateDisplay = document.getElementById('selectedDateDisplay');
+        const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+        const openScheduleModalBtn = document.getElementById('openScheduleModal');
+        const prevMonthBtn = document.getElementById('prevMonth');
+        const nextMonthBtn = document.getElementById('nextMonth');
+
+        const scheduleAppointmentModal = document.getElementById('scheduleAppointmentModal');
+        const closeScheduleModalBtn = document.getElementById('closeScheduleModalBtn');
+        const scheduleForm = document.getElementById('scheduleForm');
+        const scheduleServicesCheckboxes = document.getElementById('scheduleServicesCheckboxes');
+        const scheduleClientSelect = document.getElementById('scheduleClientSelect');
+        const scheduleClientNameInput = document.getElementById('scheduleClientName');
+        const scheduleAppointmentDateInput = document.getElementById('scheduleAppointmentDate');
+        const scheduleAppointmentTimeInput = document.getElementById('scheduleAppointmentTime');
+        const selectedScheduleDateDisplay = document.getElementById('selectedScheduleDateDisplay');
+        const scheduleAppointmentTimeDisplay = document.getElementById('scheduleAppointmentTimeDisplay');
+        
+        const clientModal = document.getElementById('clientModal');
+        const closeClientModalBtn = document.getElementById('closeClientModalBtn');
+        const clientForm = document.getElementById('clientForm');
+        const clientNameInput = document.getElementById('clientName');
+        const clientPhoneInput = document.getElementById('clientPhone');
+        const clientIdInput = document.getElementById('clientId');
+        
+        const dailyAppointmentsList = document.getElementById('dailyAppointmentsList');
+        const noAppointmentsMessage = document.getElementById('noAppointmentsMessage');
+        const openScheduleModalFromAppointmentsBtn = document.getElementById('openScheduleModalFromAppointments');
+        
+        // Updated Cut Counter Element Refs
+        const todayCutsCountDisplay = document.getElementById('todayCutsCount');
+        const todayEarningsDisplay = document.getElementById('todayEarnings');
+        const registerCashCutBtn = document.getElementById('registerCashCutBtn');
+        const registerTransferCutBtn = document.getElementById('registerTransferCutBtn');
+        const resetCounterBtn = document.getElementById('resetCounterBtn');
+        const serviceSelectionContainer = document.getElementById('serviceSelectionContainer'); 
+        const currentCutTotalDisplay = document.getElementById('currentCutTotalDisplay'); 
+        
+        const clientSearchInput = document.getElementById('clientSearchInput');
+        const clientsList = document.getElementById('clientsList');
+        const openClientModalBtn = document.getElementById('openClientModalBtn');
+        const clientModalTitle = document.getElementById('clientModalTitle');
+        const clientSubmitBtn = document.getElementById('clientSubmitBtn');
+
+        const clientDetailName = document.getElementById('clientDetailName');
+        const clientDetailPhone = document.getElementById('clientDetailPhone');
+        const clientDetailVisits = document.getElementById('clientDetailVisits');
+        const clientDetailLastVisit = document.getElementById('clientDetailLastVisit');
+        const clientDetailAppointmentsList = document.getElementById('clientDetailAppointmentsList');
+        
+        const statsPeriodDisplay = document.getElementById('statsPeriodDisplay');
+        const prevStatsPeriodBtn = document.getElementById('prevStatsPeriod');
+        const nextStatsPeriodBtn = document.getElementById('nextStatsPeriod');
+        const statsTabDaily = document.getElementById('statsTabDaily');
+        const statsTabWeekly = document.getElementById('statsTabWeekly');
+        const statsTabMonthly = document.getElementById('statsTabMonthly');
+        const statsDailyView = document.getElementById('stats-daily-view');
+        const statsWeeklyView = document.getElementById('stats-weekly-view');
+        const statsMonthlyView = document.getElementById('stats-monthly-view');
+        const statsTotalCuts = document.getElementById('statsTotalCuts');
+        const statsTotalEarnings = document.getElementById('statsTotalEarnings');
+        const statsCashEarnings = document.getElementById('statsCashEarnings');
+        const statsTransferEarnings = document.getElementById('statsTransferEarnings');
+        const statsServiceBreakdown = document.getElementById('statsServiceBreakdown');
+
+        const accentColorSelect = document.getElementById('accentColorSelect');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        
+        const dailySummaryCard = document.getElementById('dailySummaryCard');
+        const toggleSummaryBtn = document.getElementById('toggleSummaryBtn');
+        const summaryContent = document.getElementById('summaryContent');
+        const collapseIcon = document.getElementById('collapseIcon');
+        const dashboardDailyCuts = document.getElementById('dashboardDailyCuts');
+        const dashboardDailyEarnings = document.getElementById('dashboardDailyEarnings');
+        
+        // Service Modal elements
+        const servicesList = document.getElementById('servicesList');
+        const openAddServiceModalBtn = document.getElementById('openAddServiceModalBtn');
+        const serviceModal = document.getElementById('serviceModal');
+        const closeServiceModalBtn = document.getElementById('closeServiceModalBtn');
+        const serviceModalTitle = document.getElementById('serviceModalTitle');
+        const serviceForm = document.getElementById('serviceForm');
+        const serviceIdInput = document.getElementById('serviceId');
+        const serviceNameInput = document.getElementById('serviceName');
+        const servicePriceInput = document.getElementById('servicePrice');
+        const serviceSubmitBtn = document.getElementById('serviceSubmitBtn');
+        
+        // NEW Barber Info Elements
+        const barberInfoForm = document.getElementById('barberInfoForm');
+        const barberNameInput = document.getElementById('barberNameInput');
+        const barberLogoInput = document.getElementById('barberLogoInput');
+        const barberLogoFileInput = document.getElementById('barberLogoFileInput'); // NEW file input
+        const barberNameDisplay = document.getElementById('barberNameDisplay');
+        const barberLogoDisplay = document.getElementById('barberLogoDisplay');
+        
+        // ------------------------------------
+        // --- Core Application Logic ---
+
+        // --- Utility Functions (Retained) ---
+        function setLocalStorage(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        function getLocalStorage(key, defaultValue) {
+            const value = localStorage.getItem(key);
+            try {
+                return value ? JSON.parse(value) : JSON.parse(defaultValue);
+            } catch (e) {
+                console.error(`Error parsing localStorage key "${key}":`, e);
+                return JSON.parse(defaultValue);
+            }
+        }
+
+        function formatCurrency(amount) {
+            // Formato de moneda para Argentina (ARS)
+            return new Intl.NumberFormat('es-AR', {
+                style: 'currency',
+                currency: 'ARS',
+                minimumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const [year, month, day] = dateString.split('-').map(Number);
+            const date = new Date(year, month - 1, day);
+            // Formato 'Día de la semana, 1 de Enero'
+            return date.toLocaleDateString('es-AR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long'
+            });
+        }
+        
+        function getDayName(dayIndex) {
+            const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            return days[dayIndex];
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            toast.classList.remove('hidden');
+            toast.classList.add('opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('hidden');
+                    toast.classList.remove('opacity-0');
+                }, 300); // Wait for fade-out
+            }, 3000);
+        }
+
+        function showAlert(message) {
+            const customModal = document.getElementById('custom-modal');
+            const modalMessage = document.getElementById('modal-message');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+
+            modalMessage.textContent = message;
+            customModal.classList.remove('hidden');
+
+            const handler = () => {
+                customModal.classList.add('hidden');
+                modalCloseBtn.removeEventListener('click', handler);
+            };
+
+            modalCloseBtn.addEventListener('click', handler);
+        }
+        
+        // NEW Utility for file handling
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // --- Theme and Color Functions (Retained) ---
+
+        function applyPrimaryColor(color) {
+            const savedColorName = Object.keys(COLOR_PALETTES).find(key => COLOR_PALETTES[key] === color) || 'white';
+            const currentTheme = localStorage.getItem(THEME_KEY) || 'dark';
+
+            // 1. Save the base color name
+            localStorage.setItem(PRIMARY_COLOR_KEY, savedColorName);
+
+            // 2. Set the data-accent attribute for CSS specific contrast fix
+            document.documentElement.setAttribute('data-accent', savedColorName);
+
+            let finalPrimaryColor = color;
+            
+            // FIX: If in light mode and the accent color is 'white', force it to be the dark text color for contrast
+            if (currentTheme === 'light' && savedColorName === 'white') {
+                // We use the CSS variable --text-dark which is defined as #1a1a1a
+                finalPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--text-dark').trim();
+            }
+
+            // 3. Set the final color variable
+            document.documentElement.style.setProperty('--primary-color', finalPrimaryColor);
+        }
+
+        function toggleTheme(isDark) {
+            const theme = isDark ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem(THEME_KEY, theme);
+
+            // Reaplicar el color primario para que se vea bien con el nuevo fondo (esto activa el FIX)
+            const savedColorName = localStorage.getItem(PRIMARY_COLOR_KEY) || 'white';
+            const colorHex = COLOR_PALETTES[savedColorName];
+            applyPrimaryColor(colorHex);
+
+            showToast(`Modo ${isDark ? 'Oscuro' : 'Claro'} activado.`);
+
+            // Forzar una re-renderización visual de elementos clave si están activos
+            if (scheduleAppointmentScreen && scheduleAppointmentScreen.classList.contains('active')) {
+                renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth());
+                updateCalendar(selectedDate);
+                displayTimeSlots(selectedDate);
+            }
+            if (appointmentsScreen && appointmentsScreen.classList.contains('active')) {
+                displayDailyAppointments();
+            }
+            if (clientManagementScreen && clientManagementScreen.classList.contains('active')) {
+                renderClientsList(clientSearchInput.value);
+            }
+            // Importante: Actualizar la UI de la barbería para que el logo aplique el filtro condicional
+            updateBarberUI(); 
+        }
+
+        function loadTheme() {
+            // 1. Cargar el tema (Modo Oscuro/Claro)
+            const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+            const isDark = savedTheme === 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            if (darkModeToggle) {
+                darkModeToggle.checked = isDark;
+            }
+
+            // 2. Cargar el Color de Acento
+            let savedColorName = localStorage.getItem(PRIMARY_COLOR_KEY) || 'white';
+            let colorHex = COLOR_PALETTES[savedColorName];
+            
+            // Esto aplica el color y el fix de contraste
+            applyPrimaryColor(colorHex); 
+
+            // Sincronizar el selector de color
+            if (accentColorSelect) {
+                accentColorSelect.value = savedColorName;
+            }
+        }
+        
+        // --- Barber Settings Functions (UPDATED) ---
+        function loadBarberSettings() {
+            return {
+                name: getLocalStorage(BARBER_NAME_KEY, JSON.stringify(DEFAULT_BARBER_NAME)),
+                logoUrl: getLocalStorage(BARBER_LOGO_KEY, JSON.stringify(DEFAULT_BARBER_LOGO))
+            };
+        }
+
+        function saveBarberSettings(name, logoUrl) {
+            setLocalStorage(BARBER_NAME_KEY, name);
+            setLocalStorage(BARBER_LOGO_KEY, logoUrl);
+        }
+
+        function updateBarberUI() {
+            const settings = loadBarberSettings();
+            const isDefaultLogo = settings.logoUrl === DEFAULT_BARBER_LOGO;
+            
+            // 1. Update Main Menu Display
+            if (barberNameDisplay) barberNameDisplay.textContent = settings.name;
+            if (barberLogoDisplay) {
+                barberLogoDisplay.src = settings.logoUrl;
+                
+                // --- FIX: APLICAR CLASE DE INVERSIÓN SOLO SI ES EL LOGO PREDETERMINADO ---
+                if (isDefaultLogo) {
+                    barberLogoDisplay.classList.add('logo-conditional-invert');
+                } else {
+                    barberLogoDisplay.classList.remove('logo-conditional-invert');
+                }
+                // --------------------------------------------------------------------------
+            }
+            
+            // 2. Update Settings Screen Inputs (if visible or loaded)
+            if (barberNameInput) barberNameInput.value = settings.name;
+            // Solo actualiza el input de URL, no el de archivo
+            if (barberLogoInput) {
+                // Si la URL es Base64, no la mostramos en el input de URL, ya que es muy larga.
+                if (settings.logoUrl.startsWith('data:image')) {
+                     barberLogoInput.value = '';
+                } else {
+                     barberLogoInput.value = settings.logoUrl;
+                }
+            }
+            if (barberLogoFileInput) {
+                 barberLogoFileInput.value = ''; // Reset file input after successful save/load
+            }
+            
+            // 3. Update <title> and App Title metas
+            document.title = settings.name;
+            document.querySelector('meta[name="apple-mobile-web-app-title"]').setAttribute('content', settings.name);
+        }
+
+
+        // --- Data Persistence and Initialization (Retained) ---
+        function loadClients() {
+            return getLocalStorage('barberClients', '[]');
+        }
+
+        function saveClients(clients) {
+            setLocalStorage('barberClients', clients);
+        }
+        
+        function loadServices() {
+            const services = getLocalStorage(SERVICES_KEY, JSON.stringify(DEFAULT_SERVICES));
+            return services.map(s => ({ 
+                ...s, 
+                price: Number(s.price),
+                id: String(s.id)
+            }));
+        }
+
+        function saveServices(services) {
+            const validServices = services.filter(s => s.name && s.price >= 0);
+            setLocalStorage(SERVICES_KEY, validServices);
+        }
+
+        function loadAppointments() {
+            return getLocalStorage('barberAppointments', '[]');
+        }
+
+        function saveAppointments(appointments) {
+            setLocalStorage('barberAppointments', appointments);
+        }
+
+        function loadCutsHistory() {
+            return getLocalStorage('barberCutsHistory', '[]');
+        }
+
+        function saveCutsHistory(cuts) {
+            setLocalStorage('barberCutsHistory', cuts);
+        }
+        
+        function getClientById(id) {
+            const clients = loadClients();
+            return clients.find(client => client.id === id);
+        }
+
+        function getAppointmentsByDay(dateString) {
+            const appointments = loadAppointments();
+            return appointments.filter(app => app.date === dateString);
+        }
+
+        function isSlotOccupied(dateString, time) {
+            const appointments = getAppointmentsByDay(dateString);
+            return appointments.some(app => app.time === time && !app.completed);
+        }
+
+        function getDailyStats() {
+            const today = getTodayDateString();
+
+            const cutsHistory = loadCutsHistory();
+            const todayHistory = cutsHistory.filter(cut => cut.date === today);
+
+            // Total quick cuts (cash/transfer)
+            const todayQuickCuts = todayHistory.filter(cut => cut.paymentMethod === 'cash' || cut.paymentMethod === 'transfer');
+            const totalQuickCutsEarnings = todayQuickCuts.reduce((sum, cut) => sum + cut.price, 0);
+
+            // Total completed appointments
+            const completedAppointments = getAppointmentsByDay(today).filter(app => app.completed);
+            const totalAppointmentsEarnings = completedAppointments.reduce((sum, app) => sum + app.price, 0);
+            const totalAppointmentsCuts = completedAppointments.length; 
+            
+            // Combine totals for the main dashboard (all money)
+            const finalTotalCuts = todayQuickCuts.length + totalAppointmentsCuts;
+            const finalTotalEarnings = totalQuickCutsEarnings + totalAppointmentsEarnings;
+            
+            // Combined history for breakdown
+            const fullTodayHistory = [
+                ...todayQuickCuts,
+                ...completedAppointments.map(app => ({
+                    ...app,
+                    services: app.services,
+                    paymentMethod: 'appointment'
+                }))
+            ];
+            
+            // Calculate service breakdown
+            const serviceBreakdown = fullTodayHistory.reduce((acc, cut) => {
+                if (cut.paymentMethod === 'appointment' && cut.services) {
+                    cut.services.forEach(serviceName => {
+                        acc[serviceName] = (acc[serviceName] || 0) + 1;
+                    });
+                } else if (cut.paymentMethod !== 'appointment') {
+                    // Quick cuts can be broken down by services array (NEW) or grouped as 'Corte Rápido' (OLD)
+                    // We check for the 'services' array in quick cuts for better granularity
+                    if (cut.services && cut.services.length > 0) {
+                        cut.services.forEach(serviceName => {
+                             acc[serviceName] = (acc[serviceName] || 0) + 1;
+                        });
+                    } else {
+                        // Fallback for older cuts without detailed service info
+                        const serviceName = 'Corte Rápido (Contado)'; 
+                        acc[serviceName] = (acc[serviceName] || 0) + 1;
+                    }
+                }
+                return acc;
+            }, {});
+            
+
+            return { 
+                totalCuts: finalTotalCuts, 
+                totalEarnings: finalTotalEarnings, 
+                cashEarnings: todayHistory.filter(cut => cut.paymentMethod === 'cash').reduce((sum, cut) => sum + cut.price, 0),
+                transferEarnings: todayHistory.filter(cut => cut.paymentMethod === 'transfer').reduce((sum, cut) => sum + cut.price, 0),
+                serviceBreakdown
+            };
+        }
+
+        function loadDailyStats() {
+            const today = getTodayDateString();
+            const stats = getDailyStats();
+            
+            if (dashboardDailyCuts) dashboardDailyCuts.textContent = stats.totalCuts;
+            if (dashboardDailyEarnings) dashboardDailyEarnings.textContent = formatCurrency(stats.totalEarnings);
+
+            // REVISED: Calculate quick cuts summary from cutsHistory (for the Counter Screen summary only)
+            const cutsHistory = loadCutsHistory();
+            const todayQuickCuts = cutsHistory.filter(cut => 
+                cut.date === today && (cut.paymentMethod === 'cash' || cut.paymentMethod === 'transfer')
+            );
+            
+            const quickCutCount = todayQuickCuts.length;
+            const quickCutEarnings = todayQuickCuts.reduce((sum, cut) => sum + cut.price, 0);
+
+            // Update Counter Screen Summary
+            if (todayCutsCountDisplay) todayCutsCountDisplay.textContent = quickCutCount;
+            if (todayEarningsDisplay) todayEarningsDisplay.textContent = formatCurrency(quickCutEarnings);
+        }
+
+        // --- NEW/UPDATED Cut Counter Functions ---
+        
+        function renderCutCounterServices() {
+            serviceSelectionContainer.innerHTML = '';
+            const services = loadServices();
+
+            if (services.length === 0) {
+                serviceSelectionContainer.innerHTML = `<p class="text-center text-muted col-span-2">No hay servicios cargados. Añádelos en Configuración.</p>`;
+                updateCutTotal();
+                return;
+            }
+
+            services.forEach(service => {
+                const isSelected = selectedCounterServices.some(s => s.id === service.id);
+                
+                const button = document.createElement('button');
+                button.className = `service-btn text-sm ${isSelected ? 'selected-service' : ''}`;
+                button.dataset.id = service.id;
+                button.dataset.name = service.name;
+                button.dataset.price = service.price;
+                button.innerHTML = `
+                    <span class="font-bold block">${service.name}</span>
+                    <span class="text-xs">${formatCurrency(service.price)}</span>
+                `;
+                
+                button.addEventListener('click', toggleServiceSelection);
+                serviceSelectionContainer.appendChild(button);
+            });
+            
+            updateCutTotal();
+        }
+
+        function toggleServiceSelection(e) {
+            const serviceId = e.currentTarget.dataset.id;
+            const serviceName = e.currentTarget.dataset.name;
+            const servicePrice = parseInt(e.currentTarget.dataset.price);
+
+            const index = selectedCounterServices.findIndex(s => s.id === serviceId);
+
+            if (index !== -1) {
+                // Deselect
+                selectedCounterServices.splice(index, 1);
+                e.currentTarget.classList.remove('selected-service');
+            } else {
+                // Select
+                selectedCounterServices.push({ 
+                    id: serviceId, 
+                    name: serviceName, 
+                    price: servicePrice 
+                });
+                e.currentTarget.classList.add('selected-service');
+            }
+
+            updateCutTotal();
+        }
+
+        function updateCutTotal() {
+            const total = selectedCounterServices.reduce((sum, service) => sum + service.price, 0);
+            
+            currentCutTotalDisplay.textContent = formatCurrency(total);
+
+            const isDisabled = total === 0;
+            registerCashCutBtn.disabled = isDisabled;
+            registerTransferCutBtn.disabled = isDisabled;
+
+            // Update button display text
+            registerCashCutBtn.innerHTML = `Registrar **Efectivo** (${formatCurrency(total)})`;
+            registerTransferCutBtn.innerHTML = `Registrar **Transferencia** (${formatCurrency(total)})`;
+        }
+        
+        // Register cut now uses the selected services
+        function registerCut(method) {
+            if (selectedCounterServices.length === 0) {
+                showAlert('Debes seleccionar al menos un servicio.');
+                return;
+            }
+
+            const now = new Date();
+            const today = getTodayDateString();
+            const total = selectedCounterServices.reduce((sum, service) => sum + service.price, 0);
+            
+            const cutServicesNames = selectedCounterServices.map(s => s.name);
+
+            const newCut = {
+                id: Date.now().toString(),
+                date: today,
+                time: now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false }),
+                price: total, 
+                services: cutServicesNames, // Store the services that composed the cut
+                paymentMethod: method 
+            };
+
+            let cutsHistory = loadCutsHistory();
+            cutsHistory.push(newCut);
+            saveCutsHistory(cutsHistory);
+            
+            // Reset state for next cut
+            selectedCounterServices = [];
+            renderCutCounterServices(); 
+            
+            loadDailyStats(); // Update dashboard and counter summary
+            showToast(`Corte registrado: ${formatCurrency(total)} (${method === 'cash' ? 'Efectivo' : 'Transferencia'}).`);
+        }
+        
+        // This function registers a completed appointment as a history entry (retained, but ensures price is correct)
+        function registerAppointmentCut(appointment) {
+            const cutEntry = {
+                id: appointment.id,
+                date: appointment.date,
+                time: appointment.time,
+                price: appointment.price, // Uses the appointment price
+                services: appointment.services,
+                paymentMethod: 'appointment' 
+            };
+
+            let cutsHistory = loadCutsHistory();
+            
+            if (cutsHistory.some(cut => cut.id === cutEntry.id && cut.paymentMethod === 'appointment')) {
+                return;
+            }
+
+            cutsHistory.push(cutEntry);
+            saveCutsHistory(cutsHistory);
+        }
+
+        // Reset now removes all 'cash' or 'transfer' entries for today from cutsHistory
+        function resetDailyCounter() {
+            if (!confirm('¿Estás seguro de que quieres ELIMINAR todo el historial de Cortes Rápidos (Efectivo/Transferencia) registrados HOY? Esta acción es irreversible.')) {
+                return;
+            }
+
+            const today = getTodayDateString();
+            let cutsHistory = loadCutsHistory();
+
+            // Keep only cuts that are NOT quick cuts from today, or cuts that are appointments
+            cutsHistory = cutsHistory.filter(cut => 
+                cut.date !== today || cut.paymentMethod === 'appointment'
+            );
+
+            saveCutsHistory(cutsHistory);
+            loadDailyStats();
+            selectedCounterServices = [];
+            renderCutCounterServices();
+            showToast('Contador diario de cortes rápidos reiniciado. Los turnos completados NO se han eliminado.');
+        }
+
+        // --- Calendar & Scheduling Functions (Retained) ---
+        
+        function getTodayDateString() {
+            const now = new Date();
+            const todayY = now.getFullYear();
+            const todayM = String(now.getMonth() + 1).padStart(2, '0');
+            const todayD = String(now.getDate()).padStart(2, '0');
+            return `${todayY}-${todayM}-${todayD}`;
+        }
+        
+        function renderCalendar(year, month) {
+            const firstDayOfMonth = new Date(year, month, 1);
+            const lastDayOfMonth = new Date(year, month + 1, 0);
+            const today = getTodayDateString();
+
+            calendarMonthYear.textContent = firstDayOfMonth.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+            calendarDaysGrid.innerHTML = '';
+
+            let startDayOfWeek = firstDayOfMonth.getDay(); 
+
+            for (let i = 0; i < 5; i++) { 
+                const dayIndex = (startDayOfWeek + i) % 7;
+                
+                if (i < (startDayOfWeek - 2) && startDayOfWeek >= 2 && startDayOfWeek <= 6) {
+                    calendarDaysGrid.innerHTML += `<div class="calendar-day inactive"></div>`;
+                }
+            }
+
+
+            for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
+                const date = new Date(year, month, i);
+                const dayOfWeek = date.getDay(); 
+
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                const dateString = `${y}-${m}-${d}`;
+
+                // Los turnos son de Martes (2) a Sábado (6)
+                if (dayOfWeek < 2 || dayOfWeek > 6) continue;
+
+                const dayAppointments = getAppointmentsByDay(dateString);
+                const hasAppointments = dayAppointments.length > 0;
+                
+                let dayClass = 'calendar-day';
+                if (dateString === today) dayClass += ' today';
+                if (hasAppointments) dayClass += ' has-appointments';
+                if (selectedDate === dateString) dayClass += ' selected';
+
+                const dayElement = document.createElement('div');
+                dayElement.className = dayClass;
+                dayElement.textContent = i;
+                dayElement.dataset.date = dateString; 
+                
+                dayElement.addEventListener('click', () => selectDay(dayElement, dateString));
+                calendarDaysGrid.appendChild(dayElement);
+            }
+        }
+
+        function selectDay(dayElement, dateString) {
+            if (selectedDayElement) {
+                selectedDayElement.classList.remove('selected');
+            }
+
+            if (!dayElement) {
+                selectedDate = null;
+                selectedDayElement = null;
+                selectedDateDisplay.textContent = 'Selecciona un día.';
+                openScheduleModalBtn.classList.add('hidden');
+                timeSlotsContainer.innerHTML = '';
+                return;
+            }
+
+            selectedDayElement = dayElement;
+            selectedDate = dateString;
+            selectedDayElement.classList.add('selected');
+
+            selectedDateDisplay.textContent = formatDate(dateString);
+            
+            displayTimeSlots(dateString);
+            
+            openScheduleModalBtn.classList.add('hidden');
+            selectedScheduleTimeElement = null;
+            selectedTime = null;
+        }
+
+        function displayTimeSlots(dateString) {
+            timeSlotsContainer.innerHTML = '';
+            
+            if (!dateString) return;
+
+            const appointmentsOnDay = getAppointmentsByDay(dateString);
+            const now = new Date();
+            
+            const todayString = getTodayDateString();
+            const isToday = dateString === todayString;
+
+            TIME_SLOTS.forEach(time => {
+                const isBooked = isSlotOccupied(dateString, time);
+                const [hour, minute] = time.split(':').map(Number);
+                
+                const [year, month, day] = dateString.split('-').map(Number);
+                const slotTime = new Date(year, month - 1, day, hour, minute, 0, 0); 
+                
+                const isPast = isToday && slotTime <= now;
+
+                const timeSlotBtn = document.createElement('button');
+                timeSlotBtn.className = 'time-slot-btn';
+                timeSlotBtn.textContent = time;
+                
+                if (isBooked) {
+                    timeSlotBtn.classList.add('booked-green');
+                    timeSlotBtn.disabled = true;
+                } else if (isPast) {
+                    timeSlotBtn.classList.add('occupied');
+                    timeSlotBtn.disabled = true;
+                } else {
+                    timeSlotBtn.addEventListener('click', () => selectTimeSlot(timeSlotBtn, time));
+                }
+                
+                timeSlotsContainer.appendChild(timeSlotBtn);
+            });
+        }
+
+        function selectTimeSlot(timeSlotElement, time) {
+            if (selectedScheduleTimeElement) {
+                selectedScheduleTimeElement.classList.remove('selected-slot');
+            }
+            selectedScheduleTimeElement = timeSlotElement;
+            selectedScheduleTimeElement.classList.add('selected-slot');
+            selectedTime = time;
+            openScheduleModalBtn.classList.remove('hidden');
+        }
+
+        function goToScheduleToday() {
+            const todayDateString = getTodayDateString();
+            
+            showScreen(scheduleAppointmentScreen); 
+            
+            setTimeout(() => {
+                const todayElement = document.querySelector(`#calendarDaysGrid .calendar-day[data-date="${todayDateString}"]`);
+                
+                if (todayElement) {
+                    selectDay(todayElement, todayDateString);
+                } else {
+                    showToast("El día de hoy no es un día laboral (Martes a Sábado), por lo que no se puede seleccionar automáticamente.");
+                    selectDay(null, null); 
+                }
+            }, 50); 
+        }
+
+        // --- Appointment/Modal Functions (Retained) ---
+        function openScheduleModalHandler(date, time) {
+            if (!date || !time) {
+                showAlert('Por favor, selecciona una fecha y hora primero.');
+                return;
+            }
+            
+            selectedScheduleDateDisplay.textContent = formatDate(date);
+            scheduleAppointmentTimeDisplay.textContent = time;
+            scheduleAppointmentDateInput.value = date;
+            scheduleAppointmentTimeInput.value = time;
+            
+            populateClientSelect();
+            populateScheduleServices();
+
+            scheduleClientSelect.value = '';
+            scheduleClientNameInput.value = '';
+            scheduleClientNameInput.classList.add('hidden');
+            document.getElementById('scheduleClientId').value = '';
+
+            scheduleAppointmentModal.classList.remove('hidden');
+        }
+
+        function closeScheduleModal() {
+            scheduleAppointmentModal.classList.add('hidden');
+            scheduleForm.reset();
+        }
+
+        function populateScheduleServices() {
+            scheduleServicesCheckboxes.innerHTML = '';
+            const services = loadServices(); // <-- Use dynamic load
+
+            services.forEach(service => {
+                const isCut = service.name === 'Corte de Pelo'; 
+                
+                const container = document.createElement('div');
+                container.className = 'flex items-center';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `service-${service.id}`;
+                checkbox.name = 'services';
+                checkbox.value = service.name;
+                checkbox.className = 'service-checkbox w-4 h-4 text-[var(--primary-color)] bg-[var(--secondary-btn-bg)] border-gray-300 rounded focus:ring-[var(--primary-color)]';
+                
+                if (isCut) {
+                    checkbox.checked = true;
+                }
+
+                const label = document.createElement('label');
+                label.htmlFor = `service-${service.id}`;
+                label.className = `ml-2 text-sm font-medium text-[var(--text)] ${isCut ? 'font-bold' : ''}`;
+                label.textContent = `${service.name} (${formatCurrency(service.price)})`;
+
+                container.appendChild(checkbox);
+                container.appendChild(label);
+                scheduleServicesCheckboxes.appendChild(container);
+            });
+            
+            const checkboxes = scheduleServicesCheckboxes.querySelectorAll('.service-checkbox');
+            checkboxes.forEach(chk => {
+                chk.addEventListener('change', () => {
+                    const checkedCount = Array.from(checkboxes).filter(c => c.checked).length;
+                    if (checkedCount === 0) {
+                        chk.checked = true;
+                        showToast('Debes seleccionar al menos un servicio para el turno.');
+                    }
+                });
+            });
+        }
+        
+        function getAppointmentServicesAndPrice() {
+            const allServices = loadServices(); 
+            
+            const selectedServiceNames = Array.from(scheduleServicesCheckboxes.querySelectorAll('input:checked'))
+                .map(input => input.value);
+
+            let totalPrice = 0;
+            let services = [];
+            
+            selectedServiceNames.forEach(name => {
+                const service = allServices.find(s => s.name === name);
+                if (service) {
+                    services.push(service.name);
+                    totalPrice += service.price;
+                }
+            });
+            
+            if (services.length === 0) {
+                return { services: [], totalPrice: 0 };
+            }
+            
+            return { services: services, totalPrice: totalPrice };
+        }
+
+        function getAppointmentServicesText(servicesArray) {
+            return servicesArray.join(' + ');
+        }
+
+        function saveAppointment(client, date, time, services, price) {
+            let appointments = loadAppointments();
+            
+            const newAppointment = {
+                id: Date.now().toString(),
+                date: date,
+                time: time,
+                clientId: client.id,
+                clientName: client.name,
+                clientPhone: client.phone,
+                services: services,
+                price: price,
+                completed: false
+            };
+
+            appointments.push(newAppointment);
+            saveAppointments(appointments);
+
+            const clients = loadClients();
+            const clientIndex = clients.findIndex(c => c.id === client.id);
+            if (clientIndex !== -1) {
+                clients[clientIndex].lastVisit = date;
+                clients[clientIndex].visits = (clients[clientIndex].visits || 0) + 1;
+                saveClients(clients);
+            }
+
+            if (scheduleAppointmentScreen && scheduleAppointmentScreen.classList.contains('active')) {
+                displayTimeSlots(selectedDate);
+                renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth());
+                const dayElement = document.querySelector(`#calendarDaysGrid .calendar-day[data-date="${selectedDate}"]`);
+                if (dayElement) dayElement.classList.add('selected'); 
+            }
+            if (appointmentsScreen && appointmentsScreen.classList.contains('active')) {
+                displayDailyAppointments();
+            }
+
+            showToast('Turno agendado con éxito!');
+        }
+
+        function displayDailyAppointments() {
+            const today = getTodayDateString();
+
+            const appointments = getAppointmentsByDay(today).sort((a, b) => a.time.localeCompare(b.time));
+            
+            dailyAppointmentsList.innerHTML = '';
+            
+            if (appointments.length === 0) {
+                noAppointmentsMessage.classList.remove('hidden');
+                return;
+            }
+            
+            noAppointmentsMessage.classList.add('hidden');
+
+            appointments.forEach(app => {
+                const item = document.createElement('div');
+                item.className = `appointment-item card p-4 flex justify-between items-center transition-opacity duration-300 ${app.completed ? 'completed opacity-60' : 'border-l-4 border-[var(--primary-color)]'}`;
+                item.dataset.id = app.id;
+                
+                let servicesText = getAppointmentServicesText(app.services);
+
+                item.innerHTML = `
+                    <div class="flex-grow">
+                        <p class="time-text text-xl font-bold mb-1">${app.time}</p>
+                        <p class="text-lg font-semibold">${app.clientName}</p>
+                        <p class="text-sm text-muted">Servicios: ${servicesText}</p>
+                        <p class="text-sm font-bold text-accent-green">${formatCurrency(app.price)}</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        ${app.completed 
+                            ? `<span class="text-sm text-muted font-semibold">Completado</span>` 
+                            : `<button class="btn-complete text-sm complete-btn" data-id="${app.id}">✅</button>
+                               <button class="btn-secondary text-sm edit-btn" data-id="${app.id}">✎</button>`
+                        }
+                        <button class="btn-delete text-sm delete-btn" data-id="${app.id}">🗑️</button>
+                    </div>
+                `;
+
+                if (!app.completed) {
+                    item.querySelector('.complete-btn').addEventListener('click', (e) => {
+                        completeAppointment(e.target.dataset.id);
+                    });
+                }
+                item.querySelector('.delete-btn').addEventListener('click', (e) => {
+                    deleteAppointment(e.target.dataset.id);
+                });
+
+                dailyAppointmentsList.appendChild(item);
+            });
+        }
+        
+        function completeAppointment(id) {
+            let appointments = loadAppointments();
+            const index = appointments.findIndex(app => app.id === id);
+
+            if (index !== -1 && !appointments[index].completed) {
+                appointments[index].completed = true;
+                saveAppointments(appointments);
+
+                const completedApp = appointments[index];
+                registerAppointmentCut(completedApp);
+
+                showToast(`Turno de ${completedApp.clientName} completado.`);
+                
+                displayDailyAppointments();
+                loadDailyStats();
+            } else if (index !== -1 && appointments[index].completed) {
+                showAlert('Este turno ya ha sido marcado como completado.');
+            }
+        }
+        
+        function deleteAppointment(id) {
+            let appointments = loadAppointments();
+            const initialLength = appointments.length;
+            
+            appointments = appointments.filter(app => app.id !== id);
+            
+            if (appointments.length < initialLength) {
+                saveAppointments(appointments);
+                
+                showToast('Turno eliminado correctamente.');
+                
+                displayDailyAppointments();
+                if (scheduleAppointmentScreen.classList.contains('active') && selectedDate) {
+                    displayTimeSlots(selectedDate);
+                    renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth());
+                    const dayElement = document.querySelector(`#calendarDaysGrid .calendar-day[data-date="${selectedDate}"]`);
+                    if (dayElement) dayElement.classList.add('selected'); 
+                }
+            } else {
+                showAlert('Error: Turno no encontrado.');
+            }
+        }
+
+        // --- Client Management Functions (Retained) ---
+        function populateClientSelect(selectedClientId = null) {
+            scheduleClientSelect.innerHTML = '<option value="">-- Selecciona un cliente --</option>';
+            const clients = loadClients().sort((a, b) => a.name.localeCompare(b.name));
+            
+            clients.forEach(client => {
+                const option = document.createElement('option');
+                option.value = client.id;
+                option.textContent = client.name;
+                scheduleClientSelect.appendChild(option);
+            });
+
+            const newClientOption = document.createElement('option');
+            newClientOption.value = 'NEW_CLIENT';
+            newClientOption.textContent = '-- Cliente Nuevo (Escribe el nombre) --';
+            scheduleClientSelect.appendChild(newClientOption);
+
+            if (selectedClientId) {
+                scheduleClientSelect.value = selectedClientId;
+            }
+        }
+
+        function renderClientsList(searchTerm = '') {
+            clientsList.innerHTML = '';
+            const clients = loadClients().sort((a, b) => a.name.localeCompare(b.name));
+            
+            const filteredClients = clients.filter(client => 
+                client.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                (client.phone && client.phone.includes(searchTerm))
+            );
+
+            if (filteredClients.length === 0) {
+                clientsList.innerHTML = `<p class="text-center text-muted py-8">No se encontraron clientes.</p>`;
+                return;
+            }
+
+            filteredClients.forEach(client => {
+                const item = document.createElement('div');
+                item.className = 'card p-4 flex justify-between items-center cursor-pointer hover:bg-gray-800 transition-colors duration-200';
+                item.innerHTML = `
+                    <div>
+                        <p class="text-lg font-semibold" style="color: var(--primary-color);">${client.name}</p>
+                        <p class="text-sm text-muted">${client.phone || 'Sin teléfono'}</p>
+                    </div>
+                    <button class="btn-secondary px-3 py-1 text-sm view-client-btn" data-id="${client.id}">Ver</button>
+                `;
+                item.querySelector('.view-client-btn').addEventListener('click', () => viewClientDetails(client.id));
+                clientsList.appendChild(item);
+            });
+        }
+
+        function viewClientDetails(clientId) {
+            clientToView = getClientById(clientId);
+            
+            if (!clientToView) {
+                showAlert('Cliente no encontrado.');
+                return;
+            }
+
+            clientDetailName.textContent = clientToView.name;
+            clientDetailPhone.textContent = `Teléfono: ${clientToView.phone || 'N/A'}`;
+            clientDetailVisits.textContent = clientToView.visits || 0;
+            clientDetailLastVisit.textContent = clientToView.lastVisit ? formatDate(clientToView.lastVisit) : 'N/A';
+            
+            const allAppointments = loadAppointments();
+            const clientAppointments = allAppointments
+                .filter(app => app.clientId === clientId)
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+            clientDetailAppointmentsList.innerHTML = '';
+
+            if (clientAppointments.length === 0) {
+                clientDetailAppointmentsList.innerHTML = `<p class="text-center text-muted">No tiene turnos registrados.</p>`;
+            } else {
+                clientAppointments.forEach(app => {
+                    const item = document.createElement('div');
+                    item.className = 'p-3 border-b border-[var(--border-color)]';
+                    item.innerHTML = `
+                        <p class="font-semibold text-[var(--primary-color)]">${formatDate(app.date)} (${app.time})</p>
+                        <p class="text-sm text-muted">Servicios: ${getAppointmentServicesText(app.services)}</p>
+                        <p class="text-xs text-accent-green font-bold">${formatCurrency(app.price)} ${app.completed ? ' (Completado)' : ' (Pendiente)'}</p>
+                    `;
+                    clientDetailAppointmentsList.appendChild(item);
+                });
+            }
+
+            showScreen(clientDetailsScreen);
+        }
+
+        function addOrUpdateClient(e) {
+            e.preventDefault();
+
+            const id = clientIdInput.value;
+            const name = clientNameInput.value.trim();
+            const phone = clientPhoneInput.value.trim();
+
+            if (!name) {
+                showAlert('El nombre del cliente es obligatorio.');
+                return;
+            }
+
+            let clients = loadClients();
+
+            if (id) {
+                const clientIndex = clients.findIndex(c => c.id === id);
+                if (clientIndex !== -1) {
+                    clients[clientIndex].name = name;
+                    clients[clientIndex].phone = phone;
+                    saveClients(clients);
+                    showToast('Cliente actualizado.');
+                    viewClientDetails(id); 
+                }
+            } else {
+                const newClient = {
+                    id: Date.now().toString(),
+                    name: name,
+                    phone: phone,
+                    visits: 0,
+                    lastVisit: null
+                };
+                clients.push(newClient);
+                saveClients(clients);
+                showToast('Cliente añadido con éxito.');
+            }
+
+            clientModal.classList.add('hidden');
+            renderClientsList(clientSearchInput.value);
+        }
+
+        // --- Service Management Functions (Retained) ---
+        function renderServicesList() {
+            servicesList.innerHTML = '';
+            const services = loadServices().sort((a, b) => a.name.localeCompare(b.name));
+
+            if (services.length === 0) {
+                servicesList.innerHTML = `<p class="text-center text-muted py-8">No hay servicios definidos.</p>`;
+                return;
+            }
+
+            services.forEach(service => {
+                const item = document.createElement('div');
+                item.className = 'card p-4 flex justify-between items-center transition-colors duration-200';
+                
+                item.innerHTML = `
+                    <div>
+                        <p class="text-lg font-semibold" style="color: var(--primary-color);">${service.name}</p>
+                        <p class="text-sm text-accent-green font-bold">${formatCurrency(service.price)}</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button class="btn-secondary px-3 py-1 text-sm edit-service-btn" data-id="${service.id}">✎ Editar</button>
+                        <button class="btn-delete px-3 py-1 text-sm delete-service-btn" data-id="${service.id}">🗑️ Eliminar</button>
+                    </div>
+                `;
+                
+                item.querySelector('.edit-service-btn').addEventListener('click', () => openServiceModal(service.id));
+                item.querySelector('.delete-service-btn').addEventListener('click', () => deleteService(service.id, service.name));
+                
+                servicesList.appendChild(item);
+            });
+        }
+
+        function openServiceModal(serviceId = null) {
+            serviceForm.reset();
+            serviceIdInput.value = '';
+            
+            if (serviceId) {
+                const services = loadServices();
+                const service = services.find(s => s.id === serviceId);
+                
+                if (service) {
+                    serviceModalTitle.textContent = 'Editar Servicio';
+                    serviceSubmitBtn.textContent = 'Guardar Cambios';
+                    serviceIdInput.value = service.id;
+                    serviceNameInput.value = service.name;
+                    servicePriceInput.value = service.price;
+                }
+            } else {
+                serviceModalTitle.textContent = 'Añadir Nuevo Servicio';
+                serviceSubmitBtn.textContent = 'Guardar Servicio';
+            }
+            
+            serviceModal.classList.remove('hidden');
+        }
+
+        function closeServiceModal() {
+            serviceModal.classList.add('hidden');
+        }
+
+        function saveService(e) {
+            e.preventDefault();
+
+            const id = serviceIdInput.value || Date.now().toString();
+            const name = serviceNameInput.value.trim();
+            const price = parseInt(servicePriceInput.value);
+
+            if (!name || isNaN(price) || price < 0) {
+                showAlert('Por favor, ingresa un nombre y un precio válido.');
+                return;
+            }
+
+            let services = loadServices();
+            const existingIndex = services.findIndex(s => s.id === id);
+            
+            if (existingIndex === -1 && services.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+                showAlert('Ya existe un servicio con ese nombre.');
+                return;
+            }
+
+            const serviceData = {
+                id: id,
+                name: name,
+                price: price
+            };
+
+            if (existingIndex !== -1) {
+                services[existingIndex].name = name;
+                services[existingIndex].price = price;
+                showToast('Servicio actualizado.');
+            } else {
+                services.push(serviceData);
+                showToast('Servicio añadido con éxito.');
+            }
+
+            saveServices(services);
+            closeServiceModal();
+            renderServicesList();
+            
+            if (scheduleAppointmentScreen.classList.contains('active')) {
+                populateScheduleServices();
+            }
+            // NEW: Also update the cut counter services if active
+            if (cutCounterScreen.classList.contains('active')) {
+                renderCutCounterServices();
+            }
+        }
+
+        function deleteService(serviceId, serviceName) {
+            if (!confirm(`¿Estás seguro de que quieres eliminar el servicio "${serviceName}"? Esto no afectará a los turnos ya agendados.`)) {
+                return;
+            }
+
+            let services = loadServices();
+            const initialLength = services.length;
+            
+            services = services.filter(s => s.id !== serviceId);
+            
+            if (services.length < initialLength) {
+                saveServices(services);
+                showToast(`Servicio "${serviceName}" eliminado.`);
+                renderServicesList();
+                
+                if (scheduleAppointmentScreen.classList.contains('active')) {
+                    populateScheduleServices();
+                }
+                 // NEW: Also update the cut counter services if active
+                if (cutCounterScreen.classList.contains('active')) {
+                    renderCutCounterServices();
+                }
+            } else {
+                showAlert('Error: Servicio no encontrado.');
+            }
+        }
+
+        // --- Stats Functions (Retained) ---
+        function updateStatsDisplay(period, date) {
+            [statsTabDaily, statsTabWeekly, statsTabMonthly].forEach(btn => btn.classList.remove('active-tab'));
+            [statsDailyView, statsWeeklyView, statsMonthlyView].forEach(view => view.classList.remove('active'));
+
+            const cutsHistory = loadCutsHistory();
+            let totalCuts = 0;
+            let totalEarnings = 0;
+            let cashEarnings = 0;
+            let transferEarnings = 0;
+            let serviceBreakdown = {};
+
+            if (period === 'daily') {
+                statsTabDaily.classList.add('active-tab');
+                statsDailyView.classList.add('active');
+                
+                const today = getTodayDateString();
+                statsPeriodDisplay.textContent = formatDate(today);
+
+                const stats = getDailyStats();
+
+                totalCuts = stats.totalCuts;
+                totalEarnings = stats.totalEarnings;
+                cashEarnings = stats.cashEarnings;
+                transferEarnings = stats.transferEarnings;
+                serviceBreakdown = stats.serviceBreakdown;
+
+            } 
+            else if (period === 'weekly') {
+                statsTabWeekly.classList.add('active-tab');
+                statsWeeklyView.classList.add('active');
+                statsPeriodDisplay.textContent = 'Semana Actual (Próx.)';
+            } else if (period === 'monthly') {
+                statsTabMonthly.classList.add('active-tab');
+                statsMonthlyView.classList.add('active');
+                statsPeriodDisplay.textContent = 'Mes Actual (Próx.)';
+            }
+
+
+            // Update common displays
+            if (statsTotalCuts) statsTotalCuts.textContent = totalCuts;
+            if (statsTotalEarnings) statsTotalEarnings.textContent = formatCurrency(totalEarnings);
+            if (statsCashEarnings) statsCashEarnings.textContent = formatCurrency(cashEarnings);
+            if (statsTransferEarnings) statsTransferEarnings.textContent = formatCurrency(transferEarnings);
+
+            // Update service breakdown list
+            statsServiceBreakdown.innerHTML = '';
+            const serviceNames = Object.keys(serviceBreakdown).sort();
+            if (serviceNames.length === 0) {
+                 statsServiceBreakdown.innerHTML = `<p class="text-center text-muted">No hay datos de servicios.</p>`;
+            } else {
+                serviceNames.forEach(name => {
+                    const count = serviceBreakdown[name];
+                    const item = document.createElement('div');
+                    item.className = 'stats-item-detail flex justify-between';
+                    item.innerHTML = `
+                        <span class="font-medium text-[var(--text)]">${name}</span>
+                        <span class="stats-value-primary font-semibold text-lg">${count}</span>
+                    `;
+                    statsServiceBreakdown.appendChild(item);
+                });
+            }
+        }
+
+        function updateStatsPeriod(direction) {
+            showToast('Navegación por periodo aún no implementada.');
+            return;
+        }
+
+
+        // --- Screen Navigation and Display (Updated for Cut Counter) ---
+        function showScreen(screenToShow) {
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => screen.classList.remove('active'));
+            screenToShow.classList.add('active');
+
+            // Reset/Load screen specific content
+            if (screenToShow === scheduleAppointmentScreen) {
+                renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth());
+                selectDay(null, null); 
+            } else if (screenToShow === appointmentsScreen) {
+                displayDailyAppointments();
+            } else if (screenToShow === clientManagementScreen) {
+                renderClientsList();
+                clientSearchInput.value = '';
+            } else if (screenToShow === statsScreen) {
+                updateStatsDisplay(currentStatsPeriod, currentStatsDate);
+            } else if (screenToShow === cutCounterScreen) {
+                loadDailyStats(); 
+                selectedCounterServices = []; // Reset selected services when entering
+                renderCutCounterServices(); // NEW: Render the dynamic service buttons
+            } else if (screenToShow === serviceManagementScreen) { 
+                renderServicesList();
+            } else if (screenToShow === settingsScreen) {
+                updateBarberUI(); // Ensure inputs are populated
+            }
+        }
+        
+        // --- Event Listeners ---
+        if (goToTodayAppointmentsBtn) goToTodayAppointmentsBtn.addEventListener('click', () => showScreen(appointmentsScreen));
+        if (goToScheduleAppointmentBtn) goToScheduleAppointmentBtn.addEventListener('click', () => showScreen(scheduleAppointmentScreen));
+        if (goToClientsBtn) goToClientsBtn.addEventListener('click', () => showScreen(clientManagementScreen));
+        if (goToCutCounterBtn) goToCutCounterBtn.addEventListener('click', () => showScreen(cutCounterScreen));
+        if (goToStatsBtn) goToStatsBtn.addEventListener('click', () => showScreen(statsScreen));
+        if (goToSettingsBtn) goToSettingsBtn.addEventListener('click', () => showScreen(settingsScreen));
+        if (goToServiceManagementBtn) goToServiceManagementBtn.addEventListener('click', () => {
+             showScreen(serviceManagementScreen);
+             renderServicesList();
+        });
+
+
+        if (backToMainFromAppointmentsBtn) backToMainFromAppointmentsBtn.addEventListener('click', () => showScreen(mainMenuScreen));
+        if (backToMainFromScheduleBtn) backToMainFromScheduleBtn.addEventListener('click', () => showScreen(mainMenuScreen));
+        if (backToMainFromClientsBtn) backToMainFromClientsBtn.addEventListener('click', () => showScreen(mainMenuScreen));
+        if (backToMainFromCounterBtn) backToMainFromCounterBtn.addEventListener('click', () => showScreen(mainMenuScreen));
+        if (backToMainFromStatsBtn) backToMainFromStatsBtn.addEventListener('click', () => showScreen(mainMenuScreen));
+        if (backToMainFromSettingsBtn) backToMainFromSettingsBtn.addEventListener('click', () => showScreen(mainMenuScreen));
+        if (backToClientsFromDetailsBtn) backToClientsFromDetailsBtn.addEventListener('click', () => showScreen(clientManagementScreen));
+        if (backToSettingsFromServicesBtn) backToSettingsFromServicesBtn.addEventListener('click', () => showScreen(settingsScreen)); 
+        
+        if (openScheduleModalFromAppointmentsBtn) openScheduleModalFromAppointmentsBtn.addEventListener('click', goToScheduleToday);
+
+
+        function toggleSummary() {
+            const isCollapsed = dailySummaryCard.classList.contains('collapsed');
+            
+            if (!isCollapsed) {
+                summaryContent.style.maxHeight = '0';
+                collapseIcon.style.transform = 'rotate(0deg)';
+                toggleSummaryBtn.setAttribute('aria-expanded', 'false');
+                dailySummaryCard.classList.add('collapsed');
+            } else {
+                summaryContent.style.maxHeight = summaryContent.scrollHeight + 'px';
+                collapseIcon.style.transform = 'rotate(180deg)';
+                toggleSummaryBtn.setAttribute('aria-expanded', 'true');
+                dailySummaryCard.classList.remove('collapsed');
+            }
+        }
+        if (toggleSummaryBtn) toggleSummaryBtn.addEventListener('click', toggleSummary);
+
+
+        // Settings Listeners
+        if (accentColorSelect) accentColorSelect.addEventListener('change', (e) => {
+            const colorName = e.target.value;
+            const colorHex = COLOR_PALETTES[colorName];
+            applyPrimaryColor(colorHex);
+            showToast(`Color de acento cambiado a ${colorName}.`);
+        });
+
+        if (darkModeToggle) darkModeToggle.addEventListener('change', (e) => {
+            toggleTheme(e.target.checked);
+        });
+        
+        // NEW: Barber Info Listener (Updated to handle file input)
+        if (barberInfoForm) barberInfoForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const newName = barberNameInput.value.trim();
+            let newLogo = barberLogoInput.value.trim(); 
+            const logoFile = barberLogoFileInput.files[0]; 
+            
+            if (!newName) {
+                showAlert('El nombre de la barbería es obligatorio.');
+                return;
+            }
+            
+            if (logoFile) {
+                // If a file is selected, convert it to Base64 and use that
+                try {
+                    newLogo = await fileToBase64(logoFile);
+                    showToast('Logo subido y guardado localmente.');
+                    // Clear URL input to confirm file was prioritized
+                    barberLogoInput.value = ''; 
+                } catch (error) {
+                    console.error("Error al convertir archivo a Base64:", error);
+                    showAlert('Error al cargar el logo. Intenta con una URL o un archivo diferente.');
+                    return;
+                }
+            } else if (!newLogo && !logoFile) {
+                // If no file and no URL is provided/existing, use default
+                newLogo = DEFAULT_BARBER_LOGO;
+            } else if (!newLogo && logoFile) {
+                // If the URL input is empty but a file was successfully uploaded, newLogo already has the Base64 value
+                // No action needed here, newLogo is correct.
+            } else if (!newLogo.startsWith('http') && !newLogo.startsWith('data:image') && loadBarberSettings().logoUrl.startsWith('data:image')) {
+                // If the user cleared the URL input, but the previous logo was a Base64 (uploaded file), keep the Base64
+                 newLogo = loadBarberSettings().logoUrl;
+            }
+            
+            saveBarberSettings(newName, newLogo);
+            updateBarberUI();
+            showToast('Información de la barbería guardada con éxito.');
+        });
+
+
+        // Calendar Navigation Listeners
+        if (prevMonthBtn) prevMonthBtn.addEventListener('click', () => {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+            renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth());
+            selectDay(null, null); 
+        });
+        if (nextMonthBtn) nextMonthBtn.addEventListener('click', () => {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+            renderCalendar(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth());
+            selectDay(null, null); 
+        });
+
+        // Schedule Modal Listeners
+        if (openScheduleModalBtn) openScheduleModalBtn.addEventListener('click', () => openScheduleModalHandler(selectedDate, selectedTime));
+        if (closeScheduleModalBtn) closeScheduleModalBtn.addEventListener('click', closeScheduleModal);
+        
+        if (scheduleForm) scheduleForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const date = scheduleAppointmentDateInput.value;
+            const time = scheduleAppointmentTimeInput.value;
+            const clientSelectValue = scheduleClientSelect.value;
+            const clientNameNew = scheduleClientNameInput.value.trim();
+            let client = null;
+
+            if (clientSelectValue === 'NEW_CLIENT' && clientNameNew) {
+                client = {
+                    id: Date.now().toString(),
+                    name: clientNameNew,
+                    phone: '', 
+                    visits: 0,
+                    lastVisit: null
+                };
+                let clients = loadClients();
+                clients.push(client);
+                saveClients(clients);
+            } else if (clientSelectValue && clientSelectValue !== 'NEW_CLIENT') {
+                client = getClientById(clientSelectValue);
+            }
+
+            if (!client) {
+                showAlert('Por favor, selecciona o añade un cliente.');
+                return;
+            }
+
+            const { services, totalPrice } = getAppointmentServicesAndPrice();
+
+            if (totalPrice === 0 || services.length === 0) {
+                showAlert('Debes seleccionar al menos un servicio para agendar el turno.');
+                return;
+            }
+
+            saveAppointment(client, date, time, services, totalPrice);
+            closeScheduleModal();
+        });
+
+        if (scheduleClientSelect) scheduleClientSelect.addEventListener('change', (e) => {
+            if (e.target.value === 'NEW_CLIENT') {
+                scheduleClientNameInput.classList.remove('hidden');
+            } else {
+                scheduleClientNameInput.classList.add('hidden');
+                scheduleClientNameInput.value = '';
+            }
+        });
+
+        // Service Management Listeners
+        if (openAddServiceModalBtn) openAddServiceModalBtn.addEventListener('click', () => openServiceModal(null));
+        if (closeServiceModalBtn) closeServiceModalBtn.addEventListener('click', closeServiceModal);
+        if (serviceForm) serviceForm.addEventListener('submit', saveService);
+
+        // Cut Counter Listeners (UPDATED)
+        if (registerCashCutBtn) registerCashCutBtn.addEventListener('click', () => registerCut('cash'));
+        if (registerTransferCutBtn) registerTransferCutBtn.addEventListener('click', () => registerCut('transfer'));
+        if (resetCounterBtn) resetCounterBtn.addEventListener('click', resetDailyCounter);
+
+        // Client Modal Listeners
+        if (openClientModalBtn) openClientModalBtn.addEventListener('click', () => {
+            clientModalTitle.textContent = 'Añadir Cliente';
+            clientSubmitBtn.textContent = 'Guardar Cliente';
+            clientForm.reset();
+            clientIdInput.value = '';
+            clientModal.classList.remove('hidden');
+        });
+        if (closeClientModalBtn) closeClientModalBtn.addEventListener('click', () => {
+            clientModal.classList.add('hidden');
+        });
+        if (clientForm) clientForm.addEventListener('submit', addOrUpdateClient);
+        
+        if (clientSearchInput) clientSearchInput.addEventListener('input', (e) => {
+            renderClientsList(e.target.value);
+        });
+
+        // Stats Tab Listeners
+        if (statsTabDaily) statsTabDaily.addEventListener('click', () => updateStatsDisplay('daily', currentStatsDate));
+        if (statsTabWeekly) statsTabWeekly.addEventListener('click', () => updateStatsDisplay('weekly', currentStatsDate));
+        if (statsTabMonthly) statsTabMonthly.addEventListener('click', () => updateStatsDisplay('monthly', currentStatsDate));
+        
+        if (prevStatsPeriodBtn) prevStatsPeriodBtn.addEventListener('click', () => updateStatsPeriod('prev'));
+        if (nextStatsPeriodBtn) nextStatsPeriodBtn.addEventListener('click', () => updateStatsPeriod('next'));
+
+
+        // Initial setup when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            updateBarberUI(); // NEW: Load and apply barber name/logo
+            showScreen(mainMenuScreen);
+            loadDailyStats(); 
+            
+            if (summaryContent && collapseIcon && dailySummaryCard) {
+                summaryContent.style.maxHeight = '0';
+                collapseIcon.style.transform = 'rotate(0deg)'; 
+                toggleSummaryBtn.setAttribute('aria-expanded', 'false');
+                dailySummaryCard.classList.add('collapsed');
+            }
+            
+             // Inicializar clientes de ejemplo si no hay ninguno
+             if (loadClients().length === 0) {
+                 saveClients([
+                    { id: '1', name: 'Juan Perez', phone: '1134567890', visits: 5, lastVisit: '2025-11-01' },
+                    { id: '2', name: 'Martín Gomez', phone: '1122334455', visits: 1, lastVisit: '2025-11-20' },
+                 ]);
+             }
+             
+             // Inicializar servicios si no existen
+             loadServices(); 
+             
+             // Prevenir el zoom con doble toque en dispositivos táctiles
+             let lastTouchEnd = 0;
+             document.addEventListener('touchend', function(event) {
+                 const now = (new Date()).getTime();
+                 if (now - lastTouchEnd <= 300) {
+                     event.preventDefault();
+                 }
+                 lastTouchEnd = now;
+             }, false);
+        });
+    </script>
+</body>
+</html>

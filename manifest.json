@@ -1,0 +1,21 @@
+{
+    "name": "Mi Barbería App",
+    "short_name": "Barbería",
+    "description": "Aplicación de gestión personal para barberos",
+    "start_url": "barberia.html",
+    "display": "standalone",
+    "background_color": "#f0f2f5",
+    "theme_color": "#1a202c",
+    "icons": [
+        {
+            "src": "icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
