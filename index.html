@@ -282,6 +282,69 @@
             margin: 0 auto;
         }
         
+        /* Calendar day styles */
+        .calendar-day {
+            background-color: var(--secondary-btn-bg);
+            color: var(--text);
+            padding: 0.75rem 0.5rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .calendar-day:hover {
+            background-color: var(--button-bg-light);
+            transform: scale(1.05);
+        }
+        
+        .calendar-day.today {
+            background-color: rgba(52, 211, 153, 0.2);
+            color: var(--accent-green);
+            font-weight: 700;
+        }
+        
+        .calendar-day.has-appointments {
+            position: relative;
+        }
+        
+        .calendar-day.has-appointments::after {
+            content: '';
+            position: absolute;
+            bottom: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+        }
+        
+        .calendar-day.selected {
+            border: 3px solid var(--primary-color);
+            background-color: var(--primary-color);
+            color: var(--background-dark);
+            font-weight: 700;
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px var(--primary-color);
+        }
+        
+        [data-theme="light"] .calendar-day.selected {
+            color: var(--background-light);
+        }
+        
+        .calendar-day.inactive {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
         .time-slot-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -523,7 +586,7 @@
                 <h2>Corte Rápido (Contado)</h2>
             </div>
             
-            <section class="card text-center border-l-4 border-accent-green">
+            <section id="counterDailySummaryCard" class="card text-center border-l-4 border-accent-green">
                 <h3 class="text-xl font-bold text-muted mb-2">RESUMEN DEL DÍA (Cortes Rápidos)</h3>
                 <div class="grid grid-cols-2 gap-4 mt-4">
                     <div>
@@ -556,6 +619,9 @@
                         Registrar **Transferencia**
                     </button>
                 </div>
+                <button id="deleteLastCutBtn" class="btn-secondary w-full mt-4 py-3" style="background-color: #f59e0b; color: white;">
+                    ↶ Eliminar Último Corte
+                </button>
                 <button id="resetCounterBtn" class="btn-delete w-full mt-6 py-3">Reiniciar Contador Diario</button>
             </section>
         </div>
@@ -584,6 +650,15 @@
             <section class="card text-center">
                 <h3 id="clientDetailName" class="text-3xl font-bold mb-1" style="color: var(--primary-color);">Nombre del Cliente</h3>
                 <p id="clientDetailPhone" class="text-lg text-muted mb-4">Teléfono: N/A</p>
+                
+                <div class="flex justify-center gap-3 mb-4">
+                    <button id="editClientFromDetailsBtn" class="btn-secondary px-4 py-2">
+                        ✏️ Editar Cliente
+                    </button>
+                    <button id="whatsappClientBtn" class="btn-primary px-4 py-2" style="background-color: #25D366; display: none;">
+                        📱 WhatsApp
+                    </button>
+                </div>
                 
                 <div class="grid grid-cols-2 gap-4 text-center border-t pt-4 border-gray-700">
                     <div>
@@ -952,10 +1027,12 @@
         const openScheduleModalFromAppointmentsBtn = document.getElementById('openScheduleModalFromAppointments');
         
         // Updated Cut Counter Element Refs
+        const counterDailySummaryCard = document.getElementById('counterDailySummaryCard');
         const todayCutsCountDisplay = document.getElementById('todayCutsCount');
         const todayEarningsDisplay = document.getElementById('todayEarnings');
         const registerCashCutBtn = document.getElementById('registerCashCutBtn');
         const registerTransferCutBtn = document.getElementById('registerTransferCutBtn');
+        const deleteLastCutBtn = document.getElementById('deleteLastCutBtn');
         const resetCounterBtn = document.getElementById('resetCounterBtn');
         const serviceSelectionContainer = document.getElementById('serviceSelectionContainer'); 
         const currentCutTotalDisplay = document.getElementById('currentCutTotalDisplay'); 
@@ -971,6 +1048,8 @@
         const clientDetailVisits = document.getElementById('clientDetailVisits');
         const clientDetailLastVisit = document.getElementById('clientDetailLastVisit');
         const clientDetailAppointmentsList = document.getElementById('clientDetailAppointmentsList');
+        const editClientFromDetailsBtn = document.getElementById('editClientFromDetailsBtn');
+        const whatsappClientBtn = document.getElementById('whatsappClientBtn');
         
         const statsPeriodDisplay = document.getElementById('statsPeriodDisplay');
         const prevStatsPeriodBtn = document.getElementById('prevStatsPeriod');
@@ -1283,28 +1362,26 @@
             return appointments.some(app => app.time === time && !app.completed);
         }
 
-        function getDailyStats() {
-            const today = getTodayDateString();
-
+        function getDailyStatsForDate(dateString) {
             const cutsHistory = loadCutsHistory();
-            const todayHistory = cutsHistory.filter(cut => cut.date === today);
+            const dayHistory = cutsHistory.filter(cut => cut.date === dateString);
 
             // Total quick cuts (cash/transfer)
-            const todayQuickCuts = todayHistory.filter(cut => cut.paymentMethod === 'cash' || cut.paymentMethod === 'transfer');
-            const totalQuickCutsEarnings = todayQuickCuts.reduce((sum, cut) => sum + cut.price, 0);
+            const dayQuickCuts = dayHistory.filter(cut => cut.paymentMethod === 'cash' || cut.paymentMethod === 'transfer');
+            const totalQuickCutsEarnings = dayQuickCuts.reduce((sum, cut) => sum + cut.price, 0);
 
             // Total completed appointments
-            const completedAppointments = getAppointmentsByDay(today).filter(app => app.completed);
+            const completedAppointments = getAppointmentsByDay(dateString).filter(app => app.completed);
             const totalAppointmentsEarnings = completedAppointments.reduce((sum, app) => sum + app.price, 0);
             const totalAppointmentsCuts = completedAppointments.length; 
             
             // Combine totals for the main dashboard (all money)
-            const finalTotalCuts = todayQuickCuts.length + totalAppointmentsCuts;
+            const finalTotalCuts = dayQuickCuts.length + totalAppointmentsCuts;
             const finalTotalEarnings = totalQuickCutsEarnings + totalAppointmentsEarnings;
             
             // Combined history for breakdown
-            const fullTodayHistory = [
-                ...todayQuickCuts,
+            const fullDayHistory = [
+                ...dayQuickCuts,
                 ...completedAppointments.map(app => ({
                     ...app,
                     services: app.services,
@@ -1313,7 +1390,7 @@
             ];
             
             // Calculate service breakdown
-            const serviceBreakdown = fullTodayHistory.reduce((acc, cut) => {
+            const serviceBreakdown = fullDayHistory.reduce((acc, cut) => {
                 if (cut.paymentMethod === 'appointment' && cut.services) {
                     cut.services.forEach(serviceName => {
                         acc[serviceName] = (acc[serviceName] || 0) + 1;
@@ -1338,8 +1415,167 @@
             return { 
                 totalCuts: finalTotalCuts, 
                 totalEarnings: finalTotalEarnings, 
-                cashEarnings: todayHistory.filter(cut => cut.paymentMethod === 'cash').reduce((sum, cut) => sum + cut.price, 0),
-                transferEarnings: todayHistory.filter(cut => cut.paymentMethod === 'transfer').reduce((sum, cut) => sum + cut.price, 0),
+                cashEarnings: dayHistory.filter(cut => cut.paymentMethod === 'cash').reduce((sum, cut) => sum + cut.price, 0),
+                transferEarnings: dayHistory.filter(cut => cut.paymentMethod === 'transfer').reduce((sum, cut) => sum + cut.price, 0),
+                serviceBreakdown
+            };
+        }
+
+        function getDailyStats() {
+            const today = getTodayDateString();
+            return getDailyStatsForDate(today);
+        }
+
+        function getWeeklyStats(startDate) {
+            // startDate es un objeto Date que representa el inicio de la semana
+            const start = new Date(startDate);
+            start.setHours(0, 0, 0, 0);
+            
+            // Calcular el final de la semana (domingo)
+            const end = new Date(start);
+            end.setDate(start.getDate() + 6);
+            end.setHours(23, 59, 59, 999);
+            
+            const cutsHistory = loadCutsHistory();
+            const appointments = loadAppointments();
+            
+            // Filtrar cortes rápidos de la semana
+            const weekQuickCuts = cutsHistory.filter(cut => {
+                const cutDate = new Date(cut.date + 'T00:00:00');
+                return cutDate >= start && cutDate <= end && 
+                       (cut.paymentMethod === 'cash' || cut.paymentMethod === 'transfer');
+            });
+            
+            // Filtrar turnos completados de la semana
+            const weekAppointments = appointments.filter(app => {
+                if (!app.completed) return false;
+                const appDate = new Date(app.date + 'T00:00:00');
+                return appDate >= start && appDate <= end;
+            });
+            
+            const totalQuickCutsEarnings = weekQuickCuts.reduce((sum, cut) => sum + cut.price, 0);
+            const totalAppointmentsEarnings = weekAppointments.reduce((sum, app) => sum + app.price, 0);
+            const totalAppointmentsCuts = weekAppointments.length;
+            
+            const finalTotalCuts = weekQuickCuts.length + totalAppointmentsCuts;
+            const finalTotalEarnings = totalQuickCutsEarnings + totalAppointmentsEarnings;
+            
+            // Combined history for breakdown
+            const fullWeekHistory = [
+                ...weekQuickCuts,
+                ...weekAppointments.map(app => ({
+                    ...app,
+                    services: app.services,
+                    paymentMethod: 'appointment'
+                }))
+            ];
+            
+            // Calculate service breakdown
+            const serviceBreakdown = fullWeekHistory.reduce((acc, cut) => {
+                if (cut.paymentMethod === 'appointment' && cut.services) {
+                    cut.services.forEach(serviceName => {
+                        acc[serviceName] = (acc[serviceName] || 0) + 1;
+                    });
+                } else if (cut.paymentMethod !== 'appointment') {
+                    if (cut.services && cut.services.length > 0) {
+                        cut.services.forEach(serviceName => {
+                            acc[serviceName] = (acc[serviceName] || 0) + 1;
+                        });
+                    } else {
+                        const serviceName = 'Corte Rápido (Contado)';
+                        acc[serviceName] = (acc[serviceName] || 0) + 1;
+                    }
+                }
+                return acc;
+            }, {});
+            
+            const weekCuts = cutsHistory.filter(cut => {
+                const cutDate = new Date(cut.date + 'T00:00:00');
+                return cutDate >= start && cutDate <= end;
+            });
+            
+            return {
+                totalCuts: finalTotalCuts,
+                totalEarnings: finalTotalEarnings,
+                cashEarnings: weekCuts.filter(cut => cut.paymentMethod === 'cash').reduce((sum, cut) => sum + cut.price, 0),
+                transferEarnings: weekCuts.filter(cut => cut.paymentMethod === 'transfer').reduce((sum, cut) => sum + cut.price, 0),
+                serviceBreakdown,
+                startDate: start,
+                endDate: end
+            };
+        }
+
+        function getMonthlyStats(year, month) {
+            // month es 0-indexed (0 = enero, 11 = diciembre)
+            const start = new Date(year, month, 1);
+            start.setHours(0, 0, 0, 0);
+            
+            const end = new Date(year, month + 1, 0);
+            end.setHours(23, 59, 59, 999);
+            
+            const cutsHistory = loadCutsHistory();
+            const appointments = loadAppointments();
+            
+            // Filtrar cortes rápidos del mes
+            const monthQuickCuts = cutsHistory.filter(cut => {
+                const cutDate = new Date(cut.date + 'T00:00:00');
+                return cutDate >= start && cutDate <= end && 
+                       (cut.paymentMethod === 'cash' || cut.paymentMethod === 'transfer');
+            });
+            
+            // Filtrar turnos completados del mes
+            const monthAppointments = appointments.filter(app => {
+                if (!app.completed) return false;
+                const appDate = new Date(app.date + 'T00:00:00');
+                return appDate >= start && appDate <= end;
+            });
+            
+            const totalQuickCutsEarnings = monthQuickCuts.reduce((sum, cut) => sum + cut.price, 0);
+            const totalAppointmentsEarnings = monthAppointments.reduce((sum, app) => sum + app.price, 0);
+            const totalAppointmentsCuts = monthAppointments.length;
+            
+            const finalTotalCuts = monthQuickCuts.length + totalAppointmentsCuts;
+            const finalTotalEarnings = totalQuickCutsEarnings + totalAppointmentsEarnings;
+            
+            // Combined history for breakdown
+            const fullMonthHistory = [
+                ...monthQuickCuts,
+                ...monthAppointments.map(app => ({
+                    ...app,
+                    services: app.services,
+                    paymentMethod: 'appointment'
+                }))
+            ];
+            
+            // Calculate service breakdown
+            const serviceBreakdown = fullMonthHistory.reduce((acc, cut) => {
+                if (cut.paymentMethod === 'appointment' && cut.services) {
+                    cut.services.forEach(serviceName => {
+                        acc[serviceName] = (acc[serviceName] || 0) + 1;
+                    });
+                } else if (cut.paymentMethod !== 'appointment') {
+                    if (cut.services && cut.services.length > 0) {
+                        cut.services.forEach(serviceName => {
+                            acc[serviceName] = (acc[serviceName] || 0) + 1;
+                        });
+                    } else {
+                        const serviceName = 'Corte Rápido (Contado)';
+                        acc[serviceName] = (acc[serviceName] || 0) + 1;
+                    }
+                }
+                return acc;
+            }, {});
+            
+            const monthCuts = cutsHistory.filter(cut => {
+                const cutDate = new Date(cut.date + 'T00:00:00');
+                return cutDate >= start && cutDate <= end;
+            });
+            
+            return {
+                totalCuts: finalTotalCuts,
+                totalEarnings: finalTotalEarnings,
+                cashEarnings: monthCuts.filter(cut => cut.paymentMethod === 'cash').reduce((sum, cut) => sum + cut.price, 0),
+                transferEarnings: monthCuts.filter(cut => cut.paymentMethod === 'transfer').reduce((sum, cut) => sum + cut.price, 0),
                 serviceBreakdown
             };
         }
@@ -1363,6 +1599,15 @@
             // Update Counter Screen Summary
             if (todayCutsCountDisplay) todayCutsCountDisplay.textContent = quickCutCount;
             if (todayEarningsDisplay) todayEarningsDisplay.textContent = formatCurrency(quickCutEarnings);
+            
+            // Show/hide summary card based on whether there are cuts
+            if (counterDailySummaryCard) {
+                if (quickCutCount === 0) {
+                    counterDailySummaryCard.classList.add('hidden');
+                } else {
+                    counterDailySummaryCard.classList.remove('hidden');
+                }
+            }
         }
 
         // --- NEW/UPDATED Cut Counter Functions ---
@@ -1511,6 +1756,43 @@
             showToast('Contador diario de cortes rápidos reiniciado. Los turnos completados NO se han eliminado.');
         }
 
+        // Delete the last registered quick cut from today
+        function deleteLastCut() {
+            const today = getTodayDateString();
+            let cutsHistory = loadCutsHistory();
+
+            // Filter only today's quick cuts (cash or transfer, not appointments)
+            const todayQuickCuts = cutsHistory.filter(cut => 
+                cut.date === today && 
+                (cut.paymentMethod === 'cash' || cut.paymentMethod === 'transfer')
+            );
+
+            if (todayQuickCuts.length === 0) {
+                showAlert('No hay cortes rápidos registrados hoy para eliminar.');
+                return;
+            }
+
+            // Find the last cut (most recent by id, which is timestamp)
+            const lastCut = todayQuickCuts.reduce((latest, current) => {
+                const latestId = parseInt(latest.id) || 0;
+                const currentId = parseInt(current.id) || 0;
+                return currentId > latestId ? current : latest;
+            });
+
+            // Remove the last cut from history
+            cutsHistory = cutsHistory.filter(cut => cut.id !== lastCut.id);
+
+            saveCutsHistory(cutsHistory);
+            loadDailyStats();
+            
+            const metodoPago = lastCut.paymentMethod === 'cash' ? 'Efectivo' : 'Transferencia';
+            const servicios = lastCut.services && lastCut.services.length > 0 
+                ? lastCut.services.join(', ') 
+                : 'Servicio no especificado';
+            
+            showToast(`Último corte eliminado: ${servicios} - ${metodoPago} ($${lastCut.price.toLocaleString('es-AR')})`);
+        }
+
         // --- Calendar & Scheduling Functions (Retained) ---
         
         function getTodayDateString() {
@@ -1591,6 +1873,14 @@
             selectedDateDisplay.textContent = formatDate(dateString);
             
             displayTimeSlots(dateString);
+            
+            // Scroll to time slots section to make it visible
+            setTimeout(() => {
+                const timeSlotsSection = timeSlotsContainer.closest('section');
+                if (timeSlotsSection) {
+                    timeSlotsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }, 100);
             
             openScheduleModalBtn.classList.add('hidden');
             selectedScheduleTimeElement = null;
@@ -1934,13 +2224,30 @@
                 const item = document.createElement('div');
                 item.className = 'card p-4 flex justify-between items-center cursor-pointer hover:bg-gray-800 transition-colors duration-200';
                 item.innerHTML = `
-                    <div>
+                    <div class="flex-1">
                         <p class="text-lg font-semibold" style="color: var(--primary-color);">${client.name}</p>
                         <p class="text-sm text-muted">${client.phone || 'Sin teléfono'}</p>
                     </div>
-                    <button class="btn-secondary px-3 py-1 text-sm view-client-btn" data-id="${client.id}">Ver</button>
+                    <div class="flex gap-2">
+                        ${client.phone ? `<button class="btn-secondary px-3 py-1 text-sm whatsapp-btn" data-id="${client.id}" data-phone="${client.phone}" title="Abrir WhatsApp">📱</button>` : ''}
+                        <button class="btn-secondary px-3 py-1 text-sm edit-client-btn" data-id="${client.id}" title="Editar">✏️</button>
+                        <button class="btn-secondary px-3 py-1 text-sm view-client-btn" data-id="${client.id}">Ver</button>
+                    </div>
                 `;
-                item.querySelector('.view-client-btn').addEventListener('click', () => viewClientDetails(client.id));
+                item.querySelector('.view-client-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    viewClientDetails(client.id);
+                });
+                if (client.phone) {
+                    item.querySelector('.whatsapp-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openWhatsApp(client.phone);
+                    });
+                }
+                item.querySelector('.edit-client-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    editClient(client.id);
+                });
                 clientsList.appendChild(item);
             });
         }
@@ -1957,6 +2264,16 @@
             clientDetailPhone.textContent = `Teléfono: ${clientToView.phone || 'N/A'}`;
             clientDetailVisits.textContent = clientToView.visits || 0;
             clientDetailLastVisit.textContent = clientToView.lastVisit ? formatDate(clientToView.lastVisit) : 'N/A';
+            
+            // Mostrar/ocultar botón de WhatsApp según si tiene teléfono
+            if (whatsappClientBtn) {
+                if (clientToView.phone) {
+                    whatsappClientBtn.style.display = 'inline-block';
+                    whatsappClientBtn.onclick = () => openWhatsApp(clientToView.phone);
+                } else {
+                    whatsappClientBtn.style.display = 'none';
+                }
+            }
             
             const allAppointments = loadAppointments();
             const clientAppointments = allAppointments
@@ -1983,6 +2300,45 @@
             showScreen(clientDetailsScreen);
         }
 
+        function editClient(clientId) {
+            const client = getClientById(clientId);
+            if (!client) {
+                showAlert('Cliente no encontrado.');
+                return;
+            }
+
+            clientModalTitle.textContent = 'Editar Cliente';
+            clientSubmitBtn.textContent = 'Actualizar Cliente';
+            clientForm.reset();
+            clientIdInput.value = client.id;
+            clientNameInput.value = client.name;
+            clientPhoneInput.value = client.phone || '';
+            clientModal.classList.remove('hidden');
+        }
+
+        function openWhatsApp(phone) {
+            if (!phone) {
+                showAlert('El cliente no tiene número de teléfono registrado.');
+                return;
+            }
+            
+            // Limpiar el número de teléfono (eliminar espacios, guiones, etc.)
+            const cleanPhone = phone.replace(/\D/g, '');
+            
+            // Si el número no empieza con código de país, asumimos que es argentino (54)
+            let whatsappNumber = cleanPhone;
+            if (!cleanPhone.startsWith('54') && cleanPhone.length === 10) {
+                whatsappNumber = '54' + cleanPhone;
+            } else if (cleanPhone.length < 10) {
+                showAlert('Número de teléfono inválido.');
+                return;
+            }
+            
+            // Abrir WhatsApp Web o App
+            const whatsappUrl = `https://wa.me/${whatsappNumber}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
         function addOrUpdateClient(e) {
             e.preventDefault();
 
@@ -2004,7 +2360,13 @@
                     clients[clientIndex].phone = phone;
                     saveClients(clients);
                     showToast('Cliente actualizado.');
-                    viewClientDetails(id); 
+                    clientModal.classList.add('hidden');
+                    // Actualizar la vista si estamos en la pantalla de detalles o en la lista
+                    if (clientDetailsScreen && clientDetailsScreen.classList.contains('active')) {
+                        viewClientDetails(id);
+                    } else {
+                        renderClientsList(clientSearchInput.value);
+                    } 
                 }
             } else {
                 const newClient = {
@@ -2173,10 +2535,20 @@
                 statsTabDaily.classList.add('active-tab');
                 statsDailyView.classList.add('active');
                 
-                const today = getTodayDateString();
-                statsPeriodDisplay.textContent = formatDate(today);
+                // Usar la fecha proporcionada o la fecha de hoy por defecto
+                let targetDateString;
+                if (date instanceof Date) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    targetDateString = `${year}-${month}-${day}`;
+                } else {
+                    targetDateString = getTodayDateString();
+                }
+                
+                statsPeriodDisplay.textContent = formatDate(targetDateString);
 
-                const stats = getDailyStats();
+                const stats = getDailyStatsForDate(targetDateString);
 
                 totalCuts = stats.totalCuts;
                 totalEarnings = stats.totalEarnings;
@@ -2188,11 +2560,50 @@
             else if (period === 'weekly') {
                 statsTabWeekly.classList.add('active-tab');
                 statsWeeklyView.classList.add('active');
-                statsPeriodDisplay.textContent = 'Semana Actual (Próx.)';
+                
+                // Calcular el inicio de la semana (lunes)
+                const targetDate = date instanceof Date ? date : new Date();
+                const weekStart = new Date(targetDate);
+                const dayOfWeek = weekStart.getDay();
+                const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Si es domingo, retroceder 6 días
+                weekStart.setDate(weekStart.getDate() + diff);
+                weekStart.setHours(0, 0, 0, 0);
+                
+                const stats = getWeeklyStats(weekStart);
+                
+                // Formatear rango de fechas
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekStart.getDate() + 6);
+                const startStr = weekStart.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+                const endStr = weekEnd.toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' });
+                statsPeriodDisplay.textContent = `${startStr} - ${endStr}`;
+
+                totalCuts = stats.totalCuts;
+                totalEarnings = stats.totalEarnings;
+                cashEarnings = stats.cashEarnings;
+                transferEarnings = stats.transferEarnings;
+                serviceBreakdown = stats.serviceBreakdown;
+                
             } else if (period === 'monthly') {
                 statsTabMonthly.classList.add('active-tab');
                 statsMonthlyView.classList.add('active');
-                statsPeriodDisplay.textContent = 'Mes Actual (Próx.)';
+                
+                // Calcular el mes actual
+                const targetDate = date instanceof Date ? date : new Date();
+                const year = targetDate.getFullYear();
+                const month = targetDate.getMonth();
+                
+                const stats = getMonthlyStats(year, month);
+                
+                // Formatear nombre del mes
+                const monthName = targetDate.toLocaleDateString('es-AR', { month: 'long', year: 'numeric' });
+                statsPeriodDisplay.textContent = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+
+                totalCuts = stats.totalCuts;
+                totalEarnings = stats.totalEarnings;
+                cashEarnings = stats.cashEarnings;
+                transferEarnings = stats.transferEarnings;
+                serviceBreakdown = stats.serviceBreakdown;
             }
 
 
@@ -2222,8 +2633,35 @@
         }
 
         function updateStatsPeriod(direction) {
-            showToast('Navegación por periodo aún no implementada.');
-            return;
+            // Crear una nueva instancia de Date para evitar problemas de mutación
+            const newDate = new Date(currentStatsDate);
+            
+            if (currentStatsPeriod === 'daily') {
+                // Para día, cambiar al día anterior/siguiente
+                if (direction === 'prev') {
+                    newDate.setDate(newDate.getDate() - 1);
+                } else {
+                    newDate.setDate(newDate.getDate() + 1);
+                }
+            } else if (currentStatsPeriod === 'weekly') {
+                // Para semana, cambiar 7 días
+                if (direction === 'prev') {
+                    newDate.setDate(newDate.getDate() - 7);
+                } else {
+                    newDate.setDate(newDate.getDate() + 7);
+                }
+            } else if (currentStatsPeriod === 'monthly') {
+                // Para mes, cambiar al mes anterior/siguiente
+                if (direction === 'prev') {
+                    newDate.setMonth(newDate.getMonth() - 1);
+                } else {
+                    newDate.setMonth(newDate.getMonth() + 1);
+                }
+            }
+            
+            // Actualizar la fecha actual
+            currentStatsDate = newDate;
+            updateStatsDisplay(currentStatsPeriod, currentStatsDate);
         }
 
 
@@ -2275,6 +2713,11 @@
         if (backToMainFromStatsBtn) backToMainFromStatsBtn.addEventListener('click', () => showScreen(mainMenuScreen));
         if (backToMainFromSettingsBtn) backToMainFromSettingsBtn.addEventListener('click', () => showScreen(mainMenuScreen));
         if (backToClientsFromDetailsBtn) backToClientsFromDetailsBtn.addEventListener('click', () => showScreen(clientManagementScreen));
+        if (editClientFromDetailsBtn) editClientFromDetailsBtn.addEventListener('click', () => {
+            if (clientToView) {
+                editClient(clientToView.id);
+            }
+        });
         if (backToSettingsFromServicesBtn) backToSettingsFromServicesBtn.addEventListener('click', () => showScreen(settingsScreen)); 
         
         if (openScheduleModalFromAppointmentsBtn) openScheduleModalFromAppointmentsBtn.addEventListener('click', goToScheduleToday);
@@ -2425,6 +2868,7 @@
         // Cut Counter Listeners (UPDATED)
         if (registerCashCutBtn) registerCashCutBtn.addEventListener('click', () => registerCut('cash'));
         if (registerTransferCutBtn) registerTransferCutBtn.addEventListener('click', () => registerCut('transfer'));
+        if (deleteLastCutBtn) deleteLastCutBtn.addEventListener('click', deleteLastCut);
         if (resetCounterBtn) resetCounterBtn.addEventListener('click', resetDailyCounter);
 
         // Client Modal Listeners
@@ -2445,13 +2889,185 @@
         });
 
         // Stats Tab Listeners
-        if (statsTabDaily) statsTabDaily.addEventListener('click', () => updateStatsDisplay('daily', currentStatsDate));
-        if (statsTabWeekly) statsTabWeekly.addEventListener('click', () => updateStatsDisplay('weekly', currentStatsDate));
-        if (statsTabMonthly) statsTabMonthly.addEventListener('click', () => updateStatsDisplay('monthly', currentStatsDate));
+        if (statsTabDaily) statsTabDaily.addEventListener('click', () => {
+            currentStatsPeriod = 'daily';
+            updateStatsDisplay('daily', currentStatsDate);
+        });
+        if (statsTabWeekly) statsTabWeekly.addEventListener('click', () => {
+            currentStatsPeriod = 'weekly';
+            updateStatsDisplay('weekly', currentStatsDate);
+        });
+        if (statsTabMonthly) statsTabMonthly.addEventListener('click', () => {
+            currentStatsPeriod = 'monthly';
+            updateStatsDisplay('monthly', currentStatsDate);
+        });
         
         if (prevStatsPeriodBtn) prevStatsPeriodBtn.addEventListener('click', () => updateStatsPeriod('prev'));
         if (nextStatsPeriodBtn) nextStatsPeriodBtn.addEventListener('click', () => updateStatsPeriod('next'));
 
+        // Export Stats Button Listener
+        const exportStatsBtn = document.getElementById('exportStatsBtn');
+        if (exportStatsBtn) {
+            exportStatsBtn.addEventListener('click', async function() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // 1. Obtener datos reales de tu app usando las funciones correctas
+                const barberSettings = loadBarberSettings();
+                const nombreBarberia = barberSettings.name || 'Urban Style';
+                const historialCortes = loadCutsHistory();
+                const turnosAgendados = loadAppointments();
+                const fechaReporte = new Date().toLocaleDateString('es-AR');
+
+                // --- Encabezado ---
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(20);
+                doc.text(nombreBarberia.toUpperCase(), 105, 20, { align: "center" });
+                doc.setFontSize(10);
+                doc.text(`REPORTE DE VENTAS - ${fechaReporte}`, 105, 28, { align: "center" });
+                doc.line(20, 32, 190, 32);
+
+                // 2. Procesar Datos
+                let totalEfectivo = 0;
+                let totalTransferencia = 0;
+                let totalCortes = 0;
+                let totalTurnos = 0;
+                let totalTurnosEarnings = 0;
+
+                // Procesar cortes del historial
+                historialCortes.forEach(cut => {
+                    const monto = parseFloat(cut.price || 0);
+                    if (cut.paymentMethod === 'cash') {
+                        totalEfectivo += monto;
+                        totalCortes++;
+                    } else if (cut.paymentMethod === 'transfer') {
+                        totalTransferencia += monto;
+                        totalCortes++;
+                    } else if (cut.paymentMethod === 'appointment') {
+                        totalTurnosEarnings += monto;
+                        totalTurnos++;
+                    }
+                });
+
+                const totalGeneral = totalEfectivo + totalTransferencia + totalTurnosEarnings;
+                const totalServicios = totalCortes + totalTurnos;
+
+                // --- Tabla de Resultados ---
+                doc.setFontSize(14);
+                doc.setFont("helvetica", "bold");
+                doc.text("Resumen de Caja:", 20, 50);
+                
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "normal");
+                let yPos = 60;
+                doc.text(`Total Servicios Realizados: ${totalServicios}`, 30, yPos);
+                yPos += 8;
+                doc.text(`  - Cortes Rápidos: ${totalCortes}`, 35, yPos);
+                yPos += 8;
+                doc.text(`  - Turnos Completados: ${totalTurnos}`, 35, yPos);
+                yPos += 10;
+                doc.text(`Ingresos en Efectivo: $${totalEfectivo.toLocaleString('es-AR')}`, 30, yPos);
+                yPos += 8;
+                doc.text(`Ingresos por Transferencia: $${totalTransferencia.toLocaleString('es-AR')}`, 30, yPos);
+                yPos += 8;
+                doc.text(`Ingresos por Turnos: $${totalTurnosEarnings.toLocaleString('es-AR')}`, 30, yPos);
+
+                // Caja de Total
+                yPos += 10;
+                doc.setDrawColor(0);
+                doc.setFillColor(240, 240, 240);
+                doc.rect(20, yPos, 170, 15, 'F');
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(16);
+                doc.text(`TOTAL RECAUDADO: $${totalGeneral.toLocaleString('es-AR')}`, 105, yPos + 10, { align: "center" });
+
+                // --- Detalle de Cortes Recientes ---
+                yPos += 25;
+                if (historialCortes.length > 0) {
+                    doc.setFontSize(14);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("Detalle de los últimos cortes:", 20, yPos);
+                    doc.setFontSize(9);
+                    doc.setFont("helvetica", "normal");
+                    
+                    yPos += 10;
+                    // Ordenar por fecha y hora más reciente primero, y mostrar los últimos 15
+                    const cortesOrdenados = [...historialCortes]
+                        .sort((a, b) => {
+                            const dateA = new Date(a.date + 'T' + (a.time || '00:00'));
+                            const dateB = new Date(b.date + 'T' + (b.time || '00:00'));
+                            return dateB - dateA;
+                        })
+                        .slice(0, 15);
+                    
+                    cortesOrdenados.forEach((cut, index) => {
+                        if (yPos > 270) {
+                            // Si nos quedamos sin espacio, crear nueva página
+                            doc.addPage();
+                            yPos = 20;
+                            doc.setFontSize(14);
+                            doc.setFont("helvetica", "bold");
+                            doc.text("Continuación del detalle:", 20, yPos);
+                            doc.setFontSize(9);
+                            doc.setFont("helvetica", "normal");
+                            yPos = 30;
+                        }
+                        
+                        const fechaCorte = cut.date ? formatDate(cut.date) : 'Sin fecha';
+                        const horaCorte = cut.time || '00:00';
+                        const metodoPago = cut.paymentMethod === 'cash' ? 'Efectivo' : 
+                                          cut.paymentMethod === 'transfer' ? 'Transferencia' : 
+                                          'Turno';
+                        const servicios = cut.services && cut.services.length > 0 
+                            ? cut.services.join(', ') 
+                            : 'Servicio no especificado';
+                        
+                        // Formatear línea del corte
+                        const linea1 = `${index + 1}. ${fechaCorte} ${horaCorte}hs - ${metodoPago}: $${cut.price.toLocaleString('es-AR')}`;
+                        doc.text(linea1, 25, yPos);
+                        yPos += 6;
+                        
+                        // Segunda línea con servicios (si cabe)
+                        if (servicios.length > 60) {
+                            // Dividir servicios largos en múltiples líneas
+                            const palabras = servicios.split(', ');
+                            let lineaActual = '   Servicios: ';
+                            palabras.forEach((palabra, idx) => {
+                                if ((lineaActual + palabra).length > 70 && idx > 0) {
+                                    doc.text(lineaActual.trim(), 25, yPos);
+                                    yPos += 6;
+                                    lineaActual = '   ' + palabra + ', ';
+                                } else {
+                                    lineaActual += palabra + ', ';
+                                }
+                            });
+                            if (lineaActual.trim().length > 0) {
+                                doc.text(lineaActual.replace(/,\s*$/, ''), 25, yPos);
+                                yPos += 6;
+                            }
+                        } else {
+                            doc.text(`   Servicios: ${servicios}`, 25, yPos);
+                            yPos += 6;
+                        }
+                        yPos += 2; // Espacio entre cortes
+                    });
+                } else {
+                    doc.setFontSize(11);
+                    doc.text("No hay cortes registrados aún.", 30, yPos);
+                }
+
+                // Pie de página
+                const pageHeight = doc.internal.pageSize.height;
+                doc.setFontSize(8);
+                doc.setFont("helvetica", "italic");
+                doc.text("Generado por Urban Style App - Tu Barbería Digital", 105, pageHeight - 10, { align: "center" });
+
+                // Descarga
+                doc.save(`Cierre_${nombreBarberia.replace(/\s+/g, '_')}_${fechaReporte.replace(/\//g, '-')}.pdf`);
+                
+                if (typeof showToast === "function") showToast("✅ PDF generado con éxito");
+            });
+        }
 
         // Initial setup when the page loads
         document.addEventListener('DOMContentLoaded', () => {
@@ -2489,83 +3105,6 @@
              }, false);
         });
 
-        // --- Función para Exportar Todos los Datos ---
-document.getElementById('exportStatsBtn').onclick = async function() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    
-    // 1. Obtener datos reales de tu app
-    const nombreBarberia = localStorage.getItem('barberShopName') || 'Urban Style';
-    const historialCortes = JSON.parse(localStorage.getItem('barberStats') || '[]');
-    const turnosAgendados = JSON.parse(localStorage.getItem('barberAppointments') || '[]');
-    const fechaReporte = new Date().toLocaleDateString();
-
-    // --- Encabezado ---
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.text(nombreBarberia.toUpperCase(), 105, 20, { align: "center" });
-    doc.setFontSize(10);
-    doc.text(`REPORTE DE VENTAS - ${fechaReporte}`, 105, 28, { align: "center" });
-    doc.line(20, 32, 190, 32);
-
-    // 2. Procesar Datos
-    let totalEfectivo = 0;
-    let totalTransferencia = 0;
-    let totalCortes = 0;
-
-    // Sumar cortes rápidos (del historial de estadísticas)
-    historialCortes.forEach(item => {
-        const monto = parseFloat(item.amount || 0);
-        if (item.method === 'Efectivo') totalEfectivo += monto;
-        else totalTransferencia += monto;
-        totalCortes++;
-    });
-
-    // --- Tabla de Resultados ---
-    doc.setFontSize(14);
-    doc.text("Resumen de Caja:", 20, 50);
-    
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Total Servicios Realizados: ${totalCortes}`, 30, 60);
-    doc.text(`Ingresos en Efectivo: $${totalEfectivo.toLocaleString()}`, 30, 70);
-    doc.text(`Ingresos Transferencia: $${totalTransferencia.toLocaleString()}`, 30, 80);
-
-    // Caja de Total
-    doc.setDrawColor(0);
-    doc.setFillColor(240, 240, 240);
-    doc.rect(20, 90, 170, 15, 'F');
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text(`TOTAL RECAUDADO: $${(totalEfectivo + totalTransferencia).toLocaleString()}`, 105, 100, { align: "center" });
-
-    // --- Detalle de Clientes Recientes ---
-    if (historialCortes.length > 0) {
-        doc.setFontSize(14);
-        doc.text("Detalle de los últimos cortes:", 20, 125);
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        
-        let y = 135;
-        // Solo mostramos los últimos 10 para que no se sature el PDF
-        historialCortes.slice(-10).reverse().forEach((c, index) => {
-            if (y > 250) return; // Evitar que se salga de la página
-            const fechaCorte = new Date(c.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            doc.text(`${index + 1}. ${c.service || 'Servicio'} - ${c.method}: $${c.amount} (${fechaCorte} hs)`, 25, y);
-            y += 8;
-        });
-    }
-
-    // Pie de página
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "italic");
-    doc.text("Generado por Urban Style App - Tu Barbería Digital", 105, 285, { align: "center" });
-
-    // Descarga
-    doc.save(`Cierre_${nombreBarberia}.pdf`);
-    
-    if (typeof showToast === "function") showToast("✅ PDF generado con éxito");
-};
     </script>
 </body>
 </html>
