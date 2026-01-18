@@ -1,6 +1,6 @@
 const CACHE_NAME = 'barbershop-cache-v1';
 const urlsToCache = [
-    'barberia.html',
+    'index.html',
     'manifest.json',
     'https://cdn.tailwindcss.com',
     // Add paths to your icon files here
