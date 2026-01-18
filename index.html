@@ -14,6 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         /* Custom styles for Urban Style */
         :root {
@@ -633,6 +634,7 @@
                             <p class="text-sm text-muted">Ganancias Netas</p>
                             <p id="statsTotalEarnings" class="stats-value-green text-3xl mt-1">$0</p>
                         </div>
+                        
                     </div>
                     <div class="mt-6">
                         <h4 class="text-lg font-semibold mb-3" style="color: var(--primary-color); border-bottom: 1px solid var(--secondary-color);" class="pb-1">Desglose de Pago</h4>
@@ -661,6 +663,12 @@
                 <div class="stats-view" id="stats-monthly-view">
                     <p class="text-center text-muted">Vista Mensual</p>
                 </div>
+            </section>
+            <section class="card">
+            <h3 class="text-xl font-semibold mb-3 border-b border-gray-700 pb-1" style="color: var(--primary-color);">Gestión de Datos</h3>
+            <button id="exportStatsBtn" class="btn-primary w-full py-3 ...">
+    📥 Exportar Todo
+</button>
             </section>
         </div>
         
@@ -840,6 +848,8 @@
     </div>
 
     <script>
+
+        
         // --- Configuration Constants ---
         // const FIXED_APPOINTMENT_PRICE = 2000; // REMOVED: No longer used for quick cuts
         const TIME_SLOTS = ["09:00", "09:20", "09:40", "10:00", "10:20", "10:40", "11:00", "11:20", "11:40", "12:00", "12:20", "12:40"];
@@ -2478,6 +2488,84 @@
                  lastTouchEnd = now;
              }, false);
         });
+
+        // --- Función para Exportar Todos los Datos ---
+document.getElementById('exportStatsBtn').onclick = async function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // 1. Obtener datos reales de tu app
+    const nombreBarberia = localStorage.getItem('barberShopName') || 'Urban Style';
+    const historialCortes = JSON.parse(localStorage.getItem('barberStats') || '[]');
+    const turnosAgendados = JSON.parse(localStorage.getItem('barberAppointments') || '[]');
+    const fechaReporte = new Date().toLocaleDateString();
+
+    // --- Encabezado ---
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(20);
+    doc.text(nombreBarberia.toUpperCase(), 105, 20, { align: "center" });
+    doc.setFontSize(10);
+    doc.text(`REPORTE DE VENTAS - ${fechaReporte}`, 105, 28, { align: "center" });
+    doc.line(20, 32, 190, 32);
+
+    // 2. Procesar Datos
+    let totalEfectivo = 0;
+    let totalTransferencia = 0;
+    let totalCortes = 0;
+
+    // Sumar cortes rápidos (del historial de estadísticas)
+    historialCortes.forEach(item => {
+        const monto = parseFloat(item.amount || 0);
+        if (item.method === 'Efectivo') totalEfectivo += monto;
+        else totalTransferencia += monto;
+        totalCortes++;
+    });
+
+    // --- Tabla de Resultados ---
+    doc.setFontSize(14);
+    doc.text("Resumen de Caja:", 20, 50);
+    
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Total Servicios Realizados: ${totalCortes}`, 30, 60);
+    doc.text(`Ingresos en Efectivo: $${totalEfectivo.toLocaleString()}`, 30, 70);
+    doc.text(`Ingresos Transferencia: $${totalTransferencia.toLocaleString()}`, 30, 80);
+
+    // Caja de Total
+    doc.setDrawColor(0);
+    doc.setFillColor(240, 240, 240);
+    doc.rect(20, 90, 170, 15, 'F');
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text(`TOTAL RECAUDADO: $${(totalEfectivo + totalTransferencia).toLocaleString()}`, 105, 100, { align: "center" });
+
+    // --- Detalle de Clientes Recientes ---
+    if (historialCortes.length > 0) {
+        doc.setFontSize(14);
+        doc.text("Detalle de los últimos cortes:", 20, 125);
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        
+        let y = 135;
+        // Solo mostramos los últimos 10 para que no se sature el PDF
+        historialCortes.slice(-10).reverse().forEach((c, index) => {
+            if (y > 250) return; // Evitar que se salga de la página
+            const fechaCorte = new Date(c.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            doc.text(`${index + 1}. ${c.service || 'Servicio'} - ${c.method}: $${c.amount} (${fechaCorte} hs)`, 25, y);
+            y += 8;
+        });
+    }
+
+    // Pie de página
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "italic");
+    doc.text("Generado por Urban Style App - Tu Barbería Digital", 105, 285, { align: "center" });
+
+    // Descarga
+    doc.save(`Cierre_${nombreBarberia}.pdf`);
+    
+    if (typeof showToast === "function") showToast("✅ PDF generado con éxito");
+};
     </script>
 </body>
 </html>
